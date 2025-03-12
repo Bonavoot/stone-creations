@@ -16,7 +16,7 @@ import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 
 /**
- * This is important to avoid re-fetching root queries on sub-navigations
+ * This is important to avoid re-fetching root queries on sub-navigationsss
  * @type {ShouldRevalidateFunction}
  */
 export const shouldRevalidate = ({formMethod, currentUrl, nextUrl}) => {

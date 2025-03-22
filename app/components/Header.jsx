@@ -2,6 +2,7 @@ import {Suspense} from 'react';
 import {Await, NavLink, useAsyncValue} from '@remix-run/react';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
+import {User, ShoppingCart, Search} from 'lucide-react';
 
 /**
  * @param {HeaderProps}
@@ -10,8 +11,14 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
   return (
     <header className="header">
-      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-        <strong>{shop.name}</strong>
+      <NavLink
+        className="logo"
+        prefetch="intent"
+        to="/"
+        style={activeLinkStyle}
+        end
+      >
+        <strong>Carved & Co.</strong>
       </NavLink>
       <HeaderMenu
         menu={menu}
@@ -74,7 +81,7 @@ export function HeaderMenu({
             style={activeLinkStyle}
             to={url}
           >
-            {item.title}
+            {item.title.toUpperCase()}
           </NavLink>
         );
       })}
@@ -89,14 +96,21 @@ function HeaderCtas({isLoggedIn, cart}) {
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
+      <SearchToggle />
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        <Suspense fallback="Sign in">
-          <Await resolve={isLoggedIn} errorElement="Sign in">
-            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
+        <Suspense fallback={<User size={20} />}>
+          <Await resolve={isLoggedIn} errorElement={<User size={20} />}>
+            {(isLoggedIn) => (
+              <>
+                <span className="sr-only">
+                  {isLoggedIn ? <User size={20} /> : <User size={20} />}
+                </span>
+              </>
+            )}
           </Await>
         </Suspense>
       </NavLink>
-      <SearchToggle />
+
       <CartToggle cart={cart} />
     </nav>
   );
@@ -118,7 +132,7 @@ function SearchToggle() {
   const {open} = useAside();
   return (
     <button className="reset" onClick={() => open('search')}>
-      Search
+      <Search size={20} />
     </button>
   );
 }
@@ -144,7 +158,7 @@ function CartBadge({count}) {
         });
       }}
     >
-      Cart {count === null ? <span>&nbsp;</span> : count}
+      <ShoppingCart size={20} /> {count === null ? <span>&nbsp;</span> : count}
     </a>
   );
 }

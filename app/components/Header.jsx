@@ -11,22 +11,21 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
   return (
     <header className="header">
-      <NavLink
-        className="logo"
-        prefetch="intent"
-        to="/"
-        style={activeLinkStyle}
-        end
-      >
-        <strong>Carved & Co.</strong>
-      </NavLink>
-      <HeaderMenu
-        menu={menu}
-        viewport="desktop"
-        primaryDomainUrl={header.shop.primaryDomain.url}
-        publicStoreDomain={publicStoreDomain}
-      />
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+      <div className="banner">
+        <p className="banner-txt">ALL PRODUCTS MADE & SHIPPED IN THE U.S.A</p>
+      </div>
+      <div className="header-content">
+        <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
+          <strong className="logo">Carved & Co.</strong>
+        </NavLink>
+        <HeaderMenu
+          menu={menu}
+          viewport="desktop"
+          primaryDomainUrl={header.shop.primaryDomain.url}
+          publicStoreDomain={publicStoreDomain}
+        />
+        <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+      </div>
     </header>
   );
 }

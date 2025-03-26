@@ -15,7 +15,13 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
         <p className="banner-txt">ALL PRODUCTS MADE & SHIPPED IN THE U.S.A</p>
       </div>
       <div className="header-content">
-        <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
+        <NavLink
+          prefetch="intent"
+          to="/"
+          style={activeLinkStyle}
+          className="logo"
+          end
+        >
           <strong className="logo">Carved & Co.</strong>
         </NavLink>
         <HeaderMenu
@@ -130,7 +136,7 @@ function HeaderMenuMobileToggle() {
 function SearchToggle() {
   const {open} = useAside();
   return (
-    <button className="reset" onClick={() => open('search')}>
+    <button className="reset search-icon" onClick={() => open('search')}>
       <Search size={20} />
     </button>
   );
@@ -157,7 +163,8 @@ function CartBadge({count}) {
         });
       }}
     >
-      <ShoppingCart size={20} /> {count === null ? <span>&nbsp;</span> : count}
+      <ShoppingCart className="cart-icon" size={20} />{' '}
+      {count === null ? <span>&nbsp;</span> : count}
     </a>
   );
 }

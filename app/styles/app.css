@@ -219,6 +219,13 @@ button.reset:hover:not(:has(> *)) {
 
 .logo {
   font-size: 1.25rem;
+  font-size: 3rem;
+  font-weight: 400;
+  text-decoration: none;
+  @media (max-width: 48em) {
+    font-size: 1.6rem;
+    text-wrap: nowrap;
+  }
 }
 
 .logo:hover {
@@ -226,6 +233,7 @@ button.reset:hover:not(:has(> *)) {
 }
 
 .header-menu-mobile-toggle {
+  padding: 0;
   @media (min-width: 48em) {
     display: none;
   }
@@ -266,10 +274,32 @@ button.reset:hover:not(:has(> *)) {
   position: absolute;
   right: 1.5rem;
   top: 3rem;
+  justify-content: center;
   @media (max-width: 48em) {
     position: static;
     padding-right: 1.75rem;
   }
+}
+
+.header-ctas > .search-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.header-ctas > a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cart-icon {
+  margin-right: 5px;
+}
+
+.sr-only {
+  margin-bottom: -0.2rem;
 }
 
 /*

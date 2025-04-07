@@ -95,7 +95,7 @@ function HeroBanner() {
             width: 75%;
             margin: 0 auto 2rem auto;
             overflow: hidden;
-            border-radius: 8px;
+            border-radius: 4px;
           }
           
           /* For smaller screens - 100% width */
@@ -136,6 +136,8 @@ function HeroBanner() {
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            text-align: center;
             padding: 2rem;
             background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%);
             color: white;

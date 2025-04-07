@@ -435,6 +435,11 @@ button.reset:hover:not(:has(> *)) {
 * routes/__index
 * --------------------------------------------------
 */
+
+/* .hero-text {
+  display: flex;
+} */
+
 .featured-collection {
   display: block;
   margin-bottom: 2rem;

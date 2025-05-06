@@ -7,81 +7,99 @@ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  * @type {MetaFunction<typeof loader>}
  */
 export const meta = () => {
-  return [{title: `Hydrogen | Products`}];
+  return [{title: 'Stone Creations | Our Collection'}];
 };
 
 /**
  * @param {LoaderFunctionArgs} args
  */
 export async function loader(args) {
-  // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
-
   return {...deferredData, ...criticalData};
 }
 
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- * @param {LoaderFunctionArgs}
- */
 async function loadCriticalData({context, request}) {
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
-    pageBy: 8,
+    pageBy: 12,
   });
 
   const [{products}] = await Promise.all([
     storefront.query(CATALOG_QUERY, {
       variables: {...paginationVariables},
     }),
-    // Add other queries here, so that they are loaded in parallel
   ]);
   return {products};
 }
 
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- * @param {LoaderFunctionArgs}
- */
 function loadDeferredData({context}) {
   return {};
 }
 
+const containerStyle = {
+  width: '90%',
+  maxWidth: '1400px',
+  margin: '0 auto',
+};
+
 export default function Collection() {
-  /** @type {LoaderReturnData} */
   const {products} = useLoaderData();
 
   return (
     <div className="collection">
-      <h1>Products</h1>
-      <PaginatedResourceSection
-        connection={products}
-        resourcesClassName="products-grid"
-      >
-        {({node: product, index}) => (
-          <ProductItem
-            key={product.id}
-            product={product}
-            loading={index < 8 ? 'eager' : undefined}
-          />
-        )}
-      </PaginatedResourceSection>
+      <div className="collection-header">
+        <style>
+          {`
+            .collection-header {
+              background-color: #f8f8f8;
+              padding: 6rem 0;
+              margin-bottom: 4rem;
+              text-align: center;
+            }
+            
+            .collection-header h1 {
+              font-size: 3rem;
+              font-weight: 300;
+              margin-bottom: 1.5rem;
+              letter-spacing: 0.02em;
+            }
+            
+            .collection-header p {
+              font-size: 1.1rem;
+              line-height: 1.8;
+              color: #666;
+              max-width: 600px;
+              margin: 0 auto;
+            }
+          `}
+        </style>
+        <h1>Our Collection</h1>
+        <p>
+          Discover our curated selection of premium marble products, each piece
+          meticulously crafted to meet the highest standards of luxury and
+          design.
+        </p>
+      </div>
+
+      <div style={containerStyle}>
+        <PaginatedResourceSection
+          connection={products}
+          resourcesClassName="products-grid"
+        >
+          {({node: product, index}) => (
+            <ProductItem
+              key={product.id}
+              product={product}
+              loading={index < 12 ? 'eager' : undefined}
+            />
+          )}
+        </PaginatedResourceSection>
+      </div>
     </div>
   );
 }
 
-/**
- * @param {{
- *   product: ProductItemFragment;
- *   loading?: 'eager' | 'lazy';
- * }}
- */
 function ProductItem({product, loading}) {
   const variantUrl = useVariantUrl(product.handle);
   return (
@@ -91,19 +109,72 @@ function ProductItem({product, loading}) {
       prefetch="intent"
       to={variantUrl}
     >
-      {product.featuredImage && (
-        <Image
-          alt={product.featuredImage.altText || product.title}
-          aspectRatio="1/1"
-          data={product.featuredImage}
-          loading={loading}
-          sizes="(min-width: 45em) 400px, 100vw"
-        />
-      )}
-      <h4>{product.title}</h4>
-      <small>
-        <Money data={product.priceRange.minVariantPrice} />
-      </small>
+      <style>
+        {`
+          .product-item {
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.3s ease;
+            display: block;
+          }
+          
+          .product-item:hover {
+            transform: translateY(-5px);
+          }
+          
+          .product-image {
+            position: relative;
+            aspect-ratio: 1/1;
+            overflow: hidden;
+            margin-bottom: 1rem;
+          }
+          
+          .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+          }
+          
+          .product-item:hover .product-image img {
+            transform: scale(1.05);
+          }
+          
+          .product-info {
+            text-align: left;
+          }
+          
+          .product-info h4 {
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin: 0.5rem 0;
+            letter-spacing: 0.05em;
+          }
+          
+          .product-info small {
+            color: #666;
+            font-size: 0.9rem;
+          }
+        `}
+      </style>
+
+      <div className="product-image">
+        {product.featuredImage && (
+          <Image
+            alt={product.featuredImage.altText || product.title}
+            aspectRatio="1/1"
+            data={product.featuredImage}
+            loading={loading}
+            sizes="(min-width: 45em) 400px, 100vw"
+          />
+        )}
+      </div>
+      <div className="product-info">
+        <h4>{product.title}</h4>
+        <small>
+          <Money data={product.priceRange.minVariantPrice} />
+        </small>
+      </div>
     </Link>
   );
 }
@@ -135,7 +206,6 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
   }
 `;
 
-// NOTE: https://shopify.dev/docs/api/storefront/2024-01/objects/product
 const CATALOG_QUERY = `#graphql
   query Catalog(
     $country: CountryCode

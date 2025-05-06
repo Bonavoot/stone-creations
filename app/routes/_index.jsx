@@ -6,7 +6,7 @@ import {Image, Money} from '@shopify/hydrogen';
  * @type {MetaFunction}
  */
 export const meta = () => {
-  return [{title: 'Hydrogen | Home'}];
+  return [{title: 'Stone Creations | Luxury Marble Products'}];
 };
 
 /**
@@ -60,9 +60,9 @@ function loadDeferredData({context}) {
 
 // Common container style to be used for product sections
 const containerStyle = {
-  width: '75%',
-  maxWidth: '1200px',
-  margin: '0 auto 2rem auto',
+  width: '90%',
+  maxWidth: '1400px',
+  margin: '0 auto',
 };
 
 export default function Homepage() {
@@ -71,10 +71,16 @@ export default function Homepage() {
   return (
     <div className="home">
       <HeroBanner />
-      <div style={{...containerStyle, marginTop: '2rem'}}>
+      <div style={{...containerStyle, marginTop: '4rem'}}>
         <FeaturedCollection collection={data.featuredCollection} />
       </div>
-      <div style={containerStyle}>
+      <div style={{...containerStyle, marginTop: '6rem'}}>
+        <DesignerSection />
+      </div>
+      <div style={{...containerStyle, marginTop: '6rem'}}>
+        <CraftsmanshipSection />
+      </div>
+      <div style={{...containerStyle, marginTop: '6rem', marginBottom: '6rem'}}>
         <RecommendedProducts products={data.recommendedProducts} />
       </div>
     </div>
@@ -89,42 +95,17 @@ function HeroBanner() {
     <div>
       <style>
         {`
-          /* Default for larger screens - 75% width */
           .hero-banner-container {
             position: relative;
-            width: 75%;
-            margin: 0 auto 2rem auto;
+            width: 100%;
+            height: 90vh;
             overflow: hidden;
-            border-radius: 4px;
-          }
-          
-          /* For smaller screens - 100% width */
-          @media (max-width: 45em) {
-            .hero-banner-container {
-              width: 100%;
-              border-radius: 0;
-            }
-            .hero-text {
-              text-align: center;
-              align-items: center;
-            }
-            .hero-text h1, .hero-text p {
-              max-width: 80%;
-              margin-left: auto;
-              margin-right: auto;
-            }
-            .hero-text h1 {
-              font-size: 1.5rem;
-            }
-            .hero-text p {
-              font-size: 1rem;
-            }
           }
           
           .hero-image {
             width: 100%;
-            height: auto;
-            display: block;
+            height: 100%;
+            object-fit: cover;
           }
           
           .hero-text {
@@ -136,39 +117,61 @@ function HeroBanner() {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 2rem;
+            align-items: flex-start;
+            padding: 4rem;
             background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%);
             color: white;
           }
           
           .hero-text h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            max-width: 50%;
+            font-size: 3.5rem;
+            font-weight: 300;
+            margin-bottom: 1.5rem;
+            max-width: 600px;
+            line-height: 1.2;
+            letter-spacing: 0.02em;
           }
           
           .hero-text p {
-            font-size: 1.1rem;
-            margin-bottom: 1.5rem;
-            max-width: 50%;
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            max-width: 500px;
+            line-height: 1.6;
+            font-weight: 300;
           }
           
           .shop-button {
             display: inline-block;
-            padding: 0.75rem 1.5rem;
-            background-color: white;
-            color: black;
+            padding: 1rem 2rem;
+            background-color: transparent;
+            color: white;
             text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            transition: all 0.2s ease;
+            border: 1px solid white;
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
           }
           
           .shop-button:hover {
-            background-color: #f0f0f0;
-            transform: translateY(-2px);
+            background-color: white;
+            color: black;
+          }
+
+          @media (max-width: 768px) {
+            .hero-text {
+              padding: 2rem;
+              align-items: center;
+              text-align: center;
+            }
+            
+            .hero-text h1 {
+              font-size: 2rem;
+            }
+            
+            .hero-text p {
+              font-size: 1rem;
+            }
           }
         `}
       </style>
@@ -177,17 +180,19 @@ function HeroBanner() {
         <img
           className="hero-image"
           src="/landing-page-kitchen.png"
-          alt="Modern Kitchen"
+          alt="Luxury Marble Kitchen"
         />
 
         <div className="hero-text">
-          <h1>Elegant Home Essentials</h1>
+          <h1>Artisanal Marble Creations for Discerning Spaces</h1>
           <p>
-            Discover our curated collection of premium products for your home
+            Exclusively crafted for interior designers and luxury residential
+            projects. Each piece tells a story of timeless elegance and
+            unparalleled craftsmanship.
           </p>
           <div>
             <Link className="shop-button" to="/collections/all">
-              Shop All
+              Explore Collection
             </Link>
           </div>
         </div>
@@ -206,17 +211,64 @@ function FeaturedCollection({collection}) {
   const image = collection?.image;
   return (
     <div style={{textAlign: 'center'}}>
+      <style>
+        {`
+          .featured-collection {
+            position: relative;
+            margin-bottom: 2rem;
+          }
+          
+          .featured-collection-image {
+            aspect-ratio: 16/9;
+            overflow: hidden;
+          }
+          
+          .featured-collection img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          
+          .featured-collection-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 2rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            color: white;
+            text-align: left;
+          }
+          
+          .featured-collection-overlay h2 {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+          }
+          
+          .featured-collection-overlay p {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            max-width: 500px;
+          }
+        `}
+      </style>
+
       <Link
         className="featured-collection"
         to={`/collections/${collection.handle}`}
-        style={{display: 'block', textAlign: 'center'}}
       >
         {image && (
-          <div className="featured-collection-image" style={{margin: '0 auto'}}>
+          <div className="featured-collection-image">
             <Image data={image} sizes="100vw" />
+            <div className="featured-collection-overlay">
+              <h2>{collection.title}</h2>
+              <p>
+                Discover our signature collection of premium marble products
+              </p>
+            </div>
           </div>
         )}
-        {/* <h1>{collection.title}</h1> */}
       </Link>
     </div>
   );
@@ -230,26 +282,64 @@ function FeaturedCollection({collection}) {
 function RecommendedProducts({products}) {
   return (
     <div className="recommended-products" style={{textAlign: 'center'}}>
-      <h2 style={{textAlign: 'left'}}>Recommended Products</h2>
+      <style>
+        {`
+          .recommended-products h2 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 3rem;
+            letter-spacing: 0.02em;
+          }
+          
+          .recommended-products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 0 auto;
+          }
+          
+          .recommended-product {
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.3s ease;
+          }
+          
+          .recommended-product:hover {
+            transform: translateY(-5px);
+          }
+          
+          .recommended-product img {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            margin-bottom: 1rem;
+          }
+          
+          .recommended-product h4 {
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin: 0.5rem 0;
+            letter-spacing: 0.05em;
+          }
+          
+          .recommended-product small {
+            color: #666;
+            font-size: 0.9rem;
+          }
+        `}
+      </style>
+
+      <h2>Curated Selection</h2>
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={products}>
           {(response) => (
-            <div
-              className="recommended-products-grid"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '1.5rem',
-                margin: '0 auto',
-              }}
-            >
+            <div className="recommended-products-grid">
               {response
                 ? response.products.nodes.map((product) => (
                     <Link
                       key={product.id}
                       className="recommended-product"
                       to={`/products/${product.handle}`}
-                      style={{textDecoration: 'none', color: 'inherit'}}
                     >
                       <Image
                         data={product.images.nodes[0]}
@@ -267,7 +357,189 @@ function RecommendedProducts({products}) {
           )}
         </Await>
       </Suspense>
-      <br />
+    </div>
+  );
+}
+
+function DesignerSection() {
+  return (
+    <div style={{textAlign: 'center', padding: '4rem 0'}}>
+      <style>
+        {`
+          .designer-section {
+            background-color: #f8f8f8;
+            padding: 4rem 0;
+          }
+          
+          .designer-content {
+            max-width: 800px;
+            margin: 0 auto;
+          }
+          
+          .designer-content h2 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            letter-spacing: 0.02em;
+          }
+          
+          .designer-content p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #666;
+            margin-bottom: 2rem;
+          }
+          
+          .designer-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+          }
+          
+          .feature-item {
+            padding: 2rem;
+          }
+          
+          .feature-item h3 {
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin: 1rem 0;
+            letter-spacing: 0.05em;
+          }
+          
+          .feature-item p {
+            font-size: 0.9rem;
+            color: #666;
+          }
+          
+          @media (max-width: 768px) {
+            .designer-features {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}
+      </style>
+
+      <div className="designer-section">
+        <div className="designer-content">
+          <h2>Designed for Designers</h2>
+          <p>
+            We understand the unique needs of interior designers and architects.
+            Our marble products are crafted to meet the highest standards of
+            luxury residential projects, offering unparalleled customization and
+            quality.
+          </p>
+
+          <div className="designer-features">
+            <div className="feature-item">
+              <h3>Custom Dimensions</h3>
+              <p>
+                Tailored to your exact specifications for perfect integration
+                into any space.
+              </p>
+            </div>
+            <div className="feature-item">
+              <h3>Premium Materials</h3>
+              <p>
+                Sourced from the finest quarries worldwide, ensuring exceptional
+                quality and beauty.
+              </p>
+            </div>
+            <div className="feature-item">
+              <h3>Designer Support</h3>
+              <p>
+                Dedicated assistance for material selection, customization, and
+                project planning.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CraftsmanshipSection() {
+  return (
+    <div style={{textAlign: 'center', padding: '4rem 0'}}>
+      <style>
+        {`
+          .craftsmanship-section {
+            background-color: white;
+          }
+          
+          .craftsmanship-content {
+            max-width: 800px;
+            margin: 0 auto;
+          }
+          
+          .craftsmanship-content h2 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            letter-spacing: 0.02em;
+          }
+          
+          .craftsmanship-content p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #666;
+            margin-bottom: 2rem;
+          }
+          
+          .craftsmanship-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+          }
+          
+          .craftsmanship-item {
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+          }
+          
+          .craftsmanship-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+          }
+          
+          .craftsmanship-item:hover img {
+            transform: scale(1.05);
+          }
+          
+          @media (max-width: 768px) {
+            .craftsmanship-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}
+      </style>
+
+      <div className="craftsmanship-section">
+        <div className="craftsmanship-content">
+          <h2>The Art of Craftsmanship</h2>
+          <p>
+            Each piece is meticulously crafted by master artisans, combining
+            traditional techniques with modern precision. Our commitment to
+            excellence ensures that every detail meets the highest standards of
+            luxury.
+          </p>
+
+          <div className="craftsmanship-grid">
+            <div className="craftsmanship-item">
+              <img src="/craftsmanship-1.jpg" alt="Master Craftsmanship" />
+            </div>
+            <div className="craftsmanship-item">
+              <img src="/craftsmanship-2.jpg" alt="Precision Engineering" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -316,9 +588,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
       }
     }
   }
-  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
+  query RecommendedProducts($country: CountryCode, $language: LanguageCode)
     @inContext(country: $country, language: $language) {
-    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
+    products(first: 8, sortKey: UPDATED_AT, reverse: true) {
       nodes {
         ...RecommendedProduct
       }

@@ -1,6 +1,7 @@
 import {Await, useLoaderData, Link} from '@remix-run/react';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
+import React from 'react';
 
 /**
  * @type {MetaFunction}
@@ -91,6 +92,17 @@ export default function Homepage() {
  * Hero banner component with static image and text overlay
  */
 function HeroBanner() {
+  const [scrollY, setScrollY] = React.useState(0);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div>
       <style>
@@ -104,8 +116,13 @@ function HeroBanner() {
           
           .hero-image {
             width: 100%;
-            height: 100%;
+            height: 110%; /* Reduced from 120% to show more of the image */
             object-fit: cover;
+            transform: translateY(${
+              scrollY * 0.3
+            }px) scale(1.1); /* Reduced parallax multiplier and added slight zoom */
+            transition: transform 0.2s ease-out; /* Slightly slower transition */
+            transform-origin: center top; /* Ensure zoom happens from the top */
           }
           
           .hero-text {
@@ -532,10 +549,16 @@ function CraftsmanshipSection() {
 
           <div className="craftsmanship-grid">
             <div className="craftsmanship-item">
-              <img src="/craftsmanship-1.jpg" alt="Master Craftsmanship" />
+              <img
+                src="app/assets/master-craftsmanship.jpg"
+                alt="Master Craftsmanship"
+              />
             </div>
             <div className="craftsmanship-item">
-              <img src="/craftsmanship-2.jpg" alt="Precision Engineering" />
+              <img
+                src="app/assets/precision-engineering.jpg"
+                alt="Precision Engineering"
+              />
             </div>
           </div>
         </div>

@@ -2,13 +2,14 @@ import {Suspense} from 'react';
 import {Await, NavLink, useAsyncValue} from '@remix-run/react';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
-import {User, ShoppingCart, Search} from 'lucide-react';
+import {User, ShoppingCart, Search, Menu} from 'lucide-react';
+import {HeaderDropdown} from './HeaderDropdown';
 
 /**
  * @param {HeaderProps}
  */
 export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
-  const {shop, menu} = header;
+  const {menu} = header;
   return (
     <header className="header">
       <div className="banner">
@@ -18,11 +19,14 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
         <NavLink
           prefetch="intent"
           to="/"
-          style={activeLinkStyle}
+          style={({isActive}) => ({
+            fontWeight: '400',
+            color: isActive ? '#000' : '#333',
+          })}
           className="logo"
           end
         >
-          <strong className="logo">Carved & Co.</strong>
+          <strong>Carved & Co.</strong>
         </NavLink>
         <HeaderMenu
           menu={menu}
@@ -53,6 +57,48 @@ export function HeaderMenu({
   const className = `header-menu-${viewport}`;
   const {close} = useAside();
 
+  // Define dropdown menu items
+  const collectionsItems = [
+    {
+      id: 'kitchen',
+      title: 'Kitchen',
+      url: '/collections/kitchen',
+    },
+    {
+      id: 'bathroom',
+      title: 'Bathroom',
+      url: '/collections/bathroom',
+    },
+    {
+      id: 'living',
+      title: 'Living Room',
+      url: '/collections/living',
+    },
+    {
+      id: 'outdoor',
+      title: 'Outdoor',
+      url: '/collections/outdoor',
+    },
+  ];
+
+  const showroomItems = [
+    {
+      id: 'residential',
+      title: 'Residential Projects',
+      url: '/showroom/residential',
+    },
+    {
+      id: 'commercial',
+      title: 'Commercial Projects',
+      url: '/showroom/commercial',
+    },
+    {
+      id: 'featured',
+      title: 'Featured Installations',
+      url: '/showroom/featured',
+    },
+  ];
+
   return (
     <nav className={className} role="navigation">
       {viewport === 'mobile' && (
@@ -69,7 +115,36 @@ export function HeaderMenu({
       {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
         if (!item.url) return null;
 
-        // if the url is internal, we strip the domain
+        // Skip the contact menu item as we'll handle it separately
+        if (item.id === 'gid://shopify/MenuItem/contact') return null;
+
+        // Handle Collections dropdown
+        if (item.title.toLowerCase() === 'collections') {
+          return (
+            <HeaderDropdown
+              key={item.id}
+              title={item.title.toUpperCase()}
+              items={collectionsItems}
+              primaryDomainUrl={primaryDomainUrl}
+              publicStoreDomain={publicStoreDomain}
+            />
+          );
+        }
+
+        // Handle Showroom dropdown
+        if (item.title.toLowerCase() === 'showroom') {
+          return (
+            <HeaderDropdown
+              key={item.id}
+              title={item.title.toUpperCase()}
+              items={showroomItems}
+              primaryDomainUrl={primaryDomainUrl}
+              publicStoreDomain={publicStoreDomain}
+            />
+          );
+        }
+
+        // Handle regular menu items
         const url =
           item.url.includes('myshopify.com') ||
           item.url.includes(publicStoreDomain) ||
@@ -90,6 +165,28 @@ export function HeaderMenu({
           </NavLink>
         );
       })}
+      {/* Add About Us link */}
+      <NavLink
+        className="header-menu-item"
+        end
+        onClick={close}
+        prefetch="intent"
+        style={activeLinkStyle}
+        to="/about"
+      >
+        ABOUT
+      </NavLink>
+      {/* Add our custom contact link */}
+      <NavLink
+        className="header-menu-item"
+        end
+        onClick={close}
+        prefetch="intent"
+        style={activeLinkStyle}
+        to="/contact"
+      >
+        CONTACT
+      </NavLink>
     </nav>
   );
 }
@@ -127,8 +224,9 @@ function HeaderMenuMobileToggle() {
     <button
       className="header-menu-mobile-toggle reset"
       onClick={() => open('mobile')}
+      aria-label="Open menu"
     >
-      <h3>☰</h3>
+      <Menu size={24} />
     </button>
   );
 }
@@ -201,6 +299,15 @@ const FALLBACK_HEADER_MENU = {
       items: [],
     },
     {
+      id: 'gid://shopify/MenuItem/showroom',
+      resourceId: null,
+      tags: [],
+      title: 'Showroom',
+      type: 'HTTP',
+      url: '/showroom',
+      items: [],
+    },
+    {
       id: 'gid://shopify/MenuItem/461609533496',
       resourceId: null,
       tags: [],
@@ -219,12 +326,21 @@ const FALLBACK_HEADER_MENU = {
       items: [],
     },
     {
-      id: 'gid://shopify/MenuItem/461609599032',
-      resourceId: 'gid://shopify/Page/92591030328',
+      id: 'gid://shopify/MenuItem/about',
+      resourceId: null,
       tags: [],
-      title: 'About',
-      type: 'PAGE',
-      url: '/pages/about',
+      title: 'About Us',
+      type: 'HTTP',
+      url: '/about',
+      items: [],
+    },
+    {
+      id: 'gid://shopify/MenuItem/contact',
+      resourceId: null,
+      tags: [],
+      title: 'Contact',
+      type: 'HTTP',
+      url: '/contact',
       items: [],
     },
   ],
@@ -238,8 +354,8 @@ const FALLBACK_HEADER_MENU = {
  */
 function activeLinkStyle({isActive, isPending}) {
   return {
-    fontWeight: isActive ? 'bold' : undefined,
-    color: isPending ? 'grey' : 'black',
+    fontWeight: isActive ? '600' : '400',
+    color: isPending ? '#666' : '#000',
   };
 }
 

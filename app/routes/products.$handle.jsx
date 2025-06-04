@@ -72,7 +72,7 @@ async function loadCriticalData({context, params, request}) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  * @param {LoaderFunctionArgs}
  */
-function loadDeferredData({context, params}) {
+function loadDeferredData() {
   // Put any API calls that is not critical to be available on first page render
   // For example: product reviews, product recommendations, social feeds.
 
@@ -102,28 +102,196 @@ export default function Product() {
   const {title, descriptionHtml} = product;
 
   return (
-    <div className="product">
-      <ProductImage image={selectedVariant?.image} />
-      <div className="product-main">
-        <h1>{title}</h1>
-        <ProductPrice
-          price={selectedVariant?.price}
-          compareAtPrice={selectedVariant?.compareAtPrice}
-        />
-        <br />
-        <ProductForm
-          productOptions={productOptions}
-          selectedVariant={selectedVariant}
-        />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
+    <div className="product-container">
+      <style>
+        {`
+          .product-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+          }
+          
+          .product-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: start;
+          }
+          
+          .product-image-container {
+            position: sticky;
+            top: 2rem;
+          }
+          
+          .product-details {
+            max-width: 500px;
+          }
+          
+          .product-title {
+            font-size: 2rem;
+            font-weight: 300;
+            margin: 0 0 1rem 0;
+            color: #000;
+            line-height: 1.2;
+          }
+          
+          .product-price {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: #333;
+          }
+          
+          .product-form {
+            margin-bottom: 3rem;
+          }
+          
+          .product-resources {
+            margin: 2rem 0;
+            padding: 1.5rem 0;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+          }
+          
+          .resources-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 1rem 0;
+          }
+          
+          .pdf-links {
+            display: flex;
+            gap: 2rem;
+          }
+          
+          .pdf-link {
+            color: #000;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: opacity 0.2s ease;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            font-family: inherit;
+          }
+          
+          .pdf-link:hover {
+            opacity: 0.7;
+          }
+          
+          .description-section {
+            margin-top: 2rem;
+          }
+          
+          .description-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 1rem 0;
+          }
+          
+          .description-content {
+            color: #333;
+            line-height: 1.6;
+          }
+          
+          .description-content p {
+            margin: 0 0 1rem 0;
+          }
+          
+          .description-content p:last-child {
+            margin-bottom: 0;
+          }
+          
+          @media (max-width: 768px) {
+            .product-container {
+              padding: 1rem;
+            }
+            
+            .product-layout {
+              grid-template-columns: 1fr;
+              gap: 2rem;
+            }
+            
+            .product-image-container {
+              position: static;
+            }
+            
+            .product-details {
+              max-width: none;
+            }
+            
+            .product-title {
+              font-size: 1.5rem;
+            }
+            
+            .pdf-links {
+              flex-direction: column;
+              gap: 0.5rem;
+            }
+          }
+        `}
+      </style>
+
+      <div className="product-layout">
+        <div className="product-image-container">
+          <ProductImage image={selectedVariant?.image} />
+        </div>
+
+        <div className="product-details">
+          <h1 className="product-title">{title}</h1>
+
+          <div className="product-price">
+            <ProductPrice
+              price={selectedVariant?.price}
+              compareAtPrice={selectedVariant?.compareAtPrice}
+            />
+          </div>
+
+          <div className="product-form">
+            <ProductForm
+              productOptions={productOptions}
+              selectedVariant={selectedVariant}
+            />
+          </div>
+
+          <div className="product-resources">
+            <h3 className="resources-title">Resources</h3>
+            <div className="pdf-links">
+              <button
+                className="pdf-link"
+                onClick={() => {
+                  alert('Spec Sheet PDF will be available soon');
+                }}
+              >
+                Spec Sheet (PDF)
+              </button>
+              <button
+                className="pdf-link"
+                onClick={() => {
+                  alert('CAD Drawing PDF will be available soon');
+                }}
+              >
+                CAD Drawing (PDF)
+              </button>
+            </div>
+          </div>
+
+          <div className="description-section">
+            <h3 className="description-title">Description</h3>
+            <div
+              className="description-content"
+              dangerouslySetInnerHTML={{__html: descriptionHtml}}
+            />
+          </div>
+        </div>
       </div>
+
       <Analytics.ProductView
         data={{
           products: [

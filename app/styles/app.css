@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import './about.css';
 
 :root {
@@ -211,27 +211,35 @@ button.reset:hover:not(:has(> *)) {
 
   @media (max-width: 48em) {
     height: fit-content;
-    padding: 1.25rem;
+    padding: 0.5rem 1.25rem;
     gap: 1rem;
   }
 }
 
 .logo {
-  font-size: 2.25rem;
-  font-weight: 400;
   text-decoration: none;
-  letter-spacing: 0.03em;
   transition: all 0.2s ease;
-  color: #1a1a1a;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 
   &:hover {
     opacity: 0.85;
     transform: translateY(-1px);
   }
 
+  img {
+    height: 140px;
+    width: auto;
+    max-height: 140px;
+    object-fit: contain;
+  }
+
   @media (max-width: 48em) {
-    font-size: 1.75rem;
+    img {
+      height: 70px;
+      max-height: 70px;
+    }
   }
 }
 
@@ -354,7 +362,7 @@ button.reset:hover:not(:has(> *)) {
 * --------------------------------------------------
 */
 .footer {
-  background: var(--color-dark);
+  background: #1a1a1a;
   color: var(--color-light);
   padding: 4rem 0 0;
   margin-top: auto;

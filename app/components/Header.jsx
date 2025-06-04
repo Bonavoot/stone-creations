@@ -16,17 +16,12 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
         <p className="banner-txt">ALL PRODUCTS MADE & SHIPPED IN THE U.S.A</p>
       </div>
       <div className="header-content">
-        <NavLink
-          prefetch="intent"
-          to="/"
-          style={({isActive}) => ({
-            fontWeight: '400',
-            color: isActive ? '#000' : '#333',
-          })}
-          className="logo"
-          end
-        >
-          <strong>Carved & Co.</strong>
+        <NavLink prefetch="intent" to="/" className="logo" end>
+          <img
+            src="/logo-text-version.png"
+            alt="Carved & Co."
+            style={{height: '140px', width: 'auto'}}
+          />
         </NavLink>
         <HeaderMenu
           menu={menu}

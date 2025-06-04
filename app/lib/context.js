@@ -32,6 +32,9 @@ export async function createAppLoadContext(request, env, executionContext) {
     i18n: {language: 'EN', country: 'US'},
     cart: {
       queryFragment: CART_QUERY_FRAGMENT,
+      queryVariables: {
+        numCartLines: 100,
+      },
     },
   });
 

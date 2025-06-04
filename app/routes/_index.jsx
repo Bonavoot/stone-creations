@@ -150,20 +150,23 @@ function HeroBanner() {
           }
           
           .hero-text h1 {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             font-size: 3.5rem;
-            font-weight: 300;
+            font-weight: 500;
             margin-bottom: 1.5rem;
             max-width: 600px;
-            line-height: 1.2;
-            letter-spacing: 0.02em;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
           }
           
           .hero-text p {
-            font-size: 1.25rem;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 1.2rem;
             margin-bottom: 2rem;
             max-width: 500px;
-            line-height: 1.6;
-            font-weight: 300;
+            line-height: 1.5;
+            font-weight: 400;
+            opacity: 0.9;
           }
           
           .shop-button {
@@ -173,8 +176,9 @@ function HeroBanner() {
             color: white;
             text-decoration: none;
             border: 1px solid white;
-            font-weight: 400;
-            letter-spacing: 0.1em;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
             transition: all 0.3s ease;
           }
@@ -228,11 +232,10 @@ function HeroBanner() {
             transform: textTransform,
           }}
         >
-          <h1>Artisanal Marble Creations for Discerning Spaces</h1>
+          <h1>Premium Marble. Expertly Crafted.</h1>
           <p>
-            Exclusively crafted for interior designers and luxury residential
-            projects. Each piece tells a story of timeless elegance and
-            unparalleled craftsmanship.
+            High-end marble products designed for luxury interiors and
+            commercial spaces.
           </p>
           <div>
             <Link className="shop-button" to="/collections/all">
@@ -636,7 +639,7 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   }
   query RecommendedProducts($country: CountryCode, $language: LanguageCode)
     @inContext(country: $country, language: $language) {
-    products(first: 8, sortKey: UPDATED_AT, reverse: true) {
+    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
       nodes {
         ...RecommendedProduct
       }

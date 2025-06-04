@@ -81,12 +81,12 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
 
               <div className="footer-section">
                 <h3>Contact Us</h3>
-                <p>Email: info@stonecreations.com</p>
-                <p>Phone: (555) 123-4567</p>
+                <p>Email: info@carveandco.com</p>
+                <p>Phone: (631) 467-1011</p>
                 <p>
-                  Address: 123 Marble Street
+                  Address: 11 Old Dock Road
                   <br />
-                  Design District, CA 90210
+                  Yaphank, NY 11980
                 </p>
               </div>
 

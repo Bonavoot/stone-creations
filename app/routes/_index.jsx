@@ -1,5 +1,4 @@
-import {Await, useLoaderData, Link} from '@remix-run/react';
-import {Suspense} from 'react';
+import {useLoaderData, Link} from '@remix-run/react';
 import {Image, Money} from '@shopify/hydrogen';
 import React from 'react';
 
@@ -29,13 +28,14 @@ export async function loader(args) {
  * @param {LoaderFunctionArgs}
  */
 async function loadCriticalData({context}) {
-  const [{collections}] = await Promise.all([
+  const [{collections}, {products}] = await Promise.all([
     context.storefront.query(FEATURED_COLLECTION_QUERY),
-    // Add other queries here, so that they are loaded in parallel
+    context.storefront.query(RECOMMENDED_PRODUCTS_QUERY),
   ]);
 
   return {
     featuredCollection: collections.nodes[0],
+    recommendedProducts: products,
   };
 }
 
@@ -45,18 +45,8 @@ async function loadCriticalData({context}) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  * @param {LoaderFunctionArgs}
  */
-function loadDeferredData({context}) {
-  const recommendedProducts = context.storefront
-    .query(RECOMMENDED_PRODUCTS_QUERY)
-    .catch((error) => {
-      // Log query errors, but don't throw them so the page can still render
-      console.error(error);
-      return null;
-    });
-
-  return {
-    recommendedProducts,
-  };
+function loadDeferredData() {
+  return {};
 }
 
 // Common container style to be used for product sections
@@ -96,12 +86,28 @@ function HeroBanner() {
 
   React.useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      const currentScrollY = window.scrollY;
+      setScrollY(currentScrollY);
+      // Temporary debug log - remove after testing
+      if (currentScrollY > 0 && currentScrollY % 50 === 0) {
+        console.log('Scroll position:', currentScrollY);
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Check if we can access window (client-side only)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', handleScroll, {passive: true});
+
+      // Trigger initial calculation
+      handleScroll();
+
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
   }, []);
+
+  // Calculate transform values
+  const imageTransform = `translate3d(0, ${scrollY * 0.8}px, 0) scale(1.1)`;
+  const textTransform = `translate3d(0, ${scrollY * 0.4}px, 0)`;
 
   return (
     <div>
@@ -115,14 +121,15 @@ function HeroBanner() {
           }
           
           .hero-image {
+            position: absolute;
+            top: -20%;
+            left: 0;
             width: 100%;
-            height: 110%; /* Reduced from 120% to show more of the image */
+            height: 140%;
             object-fit: cover;
-            transform: translateY(${
-              scrollY * 0.3
-            }px) scale(1.1); /* Reduced parallax multiplier and added slight zoom */
-            transition: transform 0.2s ease-out; /* Slightly slower transition */
-            transform-origin: center top; /* Ensure zoom happens from the top */
+            will-change: transform;
+            backface-visibility: hidden;
+            transform-origin: center center;
           }
           
           .hero-text {
@@ -138,6 +145,8 @@ function HeroBanner() {
             padding: 4rem;
             background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%);
             color: white;
+            will-change: transform;
+            z-index: 2;
           }
           
           .hero-text h1 {
@@ -190,6 +199,16 @@ function HeroBanner() {
               font-size: 1rem;
             }
           }
+          
+          /* Reduce motion for users who prefer it */
+          @media (prefers-reduced-motion: reduce) {
+            .hero-image {
+              transform: scale(1.1) !important;
+            }
+            .hero-text {
+              transform: none !important;
+            }
+          }
         `}
       </style>
 
@@ -198,9 +217,17 @@ function HeroBanner() {
           className="hero-image"
           src="/landing-page-kitchen.png"
           alt="Luxury Marble Kitchen"
+          style={{
+            transform: imageTransform,
+          }}
         />
 
-        <div className="hero-text">
+        <div
+          className="hero-text"
+          style={{
+            transform: textTransform,
+          }}
+        >
           <h1>Artisanal Marble Creations for Discerning Spaces</h1>
           <p>
             Exclusively crafted for interior designers and luxury residential
@@ -347,33 +374,29 @@ function RecommendedProducts({products}) {
       </style>
 
       <h2>Curated Selection</h2>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Await resolve={products}>
-          {(response) => (
-            <div className="recommended-products-grid">
-              {response
-                ? response.products.nodes.map((product) => (
-                    <Link
-                      key={product.id}
-                      className="recommended-product"
-                      to={`/products/${product.handle}`}
-                    >
-                      <Image
-                        data={product.images.nodes[0]}
-                        aspectRatio="1/1"
-                        sizes="(min-width: 45em) 20vw, 50vw"
-                      />
-                      <h4>{product.title}</h4>
-                      <small>
-                        <Money data={product.priceRange.minVariantPrice} />
-                      </small>
-                    </Link>
-                  ))
-                : null}
-            </div>
-          )}
-        </Await>
-      </Suspense>
+      <div className="recommended-products-grid">
+        {products?.nodes?.length > 0 ? (
+          products.nodes.map((product) => (
+            <Link
+              key={product.id}
+              className="recommended-product"
+              to={`/products/${product.handle}`}
+            >
+              <Image
+                data={product.images.nodes[0]}
+                aspectRatio="1/1"
+                sizes="(min-width: 45em) 20vw, 50vw"
+              />
+              <h4>{product.title}</h4>
+              <small>
+                <Money data={product.priceRange.minVariantPrice} />
+              </small>
+            </Link>
+          ))
+        ) : (
+          <div>No products available</div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import {Form, useLoaderData} from '@remix-run/react';
-import {data} from '@shopify/remix-oxygen';
 
 /**
  * @type {MetaFunction}
@@ -12,12 +11,12 @@ export const meta = () => {
  * @param {LoaderFunctionArgs}
  */
 export async function loader() {
-  return data({
+  return {
     page: {
       title: 'Contact Us',
       content: "Let's discuss your next marble masterpiece",
     },
-  });
+  };
 }
 
 export default function ContactPage() {
@@ -34,22 +33,22 @@ export default function ContactPage() {
         <div className="contact-info">
           <div className="contact-info-section">
             <h3>Visit Our Showroom</h3>
-            <p>123 Marble Street</p>
-            <p>Design District, CA 90210</p>
+            <p>11 Old Dock Road</p>
+            <p>Yaphank, NY 11980</p>
             <p>United States</p>
           </div>
 
           <div className="contact-info-section">
             <h3>Business Hours</h3>
-            <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
+            <p>Monday - Friday: 8:30 AM - 4:00 PM</p>
             <p>Saturday: 10:00 AM - 4:00 PM</p>
             <p>Sunday: Closed</p>
           </div>
 
           <div className="contact-info-section">
             <h3>Get in Touch</h3>
-            <p>Phone: (555) 123-4567</p>
-            <p>Email: info@stonecreations.com</p>
+            <p>Phone: (631) 467-1011</p>
+            <p>Email: info@carveandco.com</p>
           </div>
         </div>
 

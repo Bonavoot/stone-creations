@@ -58,21 +58,64 @@ export function HeaderMenu({
       id: 'kitchen',
       title: 'Kitchen',
       url: '/collections/kitchen',
+      subItems: [
+        {
+          id: 'cutting-boards',
+          title: 'Cutting Boards',
+          url: '/collections/cutting-boards',
+        },
+        {
+          id: 'bowls',
+          title: 'Bowls',
+          url: '/collections/bowls',
+        },
+      ],
     },
     {
       id: 'bathroom',
       title: 'Bathroom',
       url: '/collections/bathroom',
+      subItems: [
+        {
+          id: 'soap-dishes',
+          title: 'Soap Dishes',
+          url: '/collections/soap-dishes',
+        },
+        {
+          id: 'waste-baskets',
+          title: 'Waste Baskets',
+          url: '/collections/waste-baskets',
+        },
+      ],
     },
     {
       id: 'living',
       title: 'Living Room',
       url: '/collections/living',
+      subItems: [
+        {
+          id: 'coffee-tables',
+          title: 'Coffee Tables',
+          url: '/collections/coffee-tables',
+        },
+        {
+          id: 'light-fixtures',
+          title: 'Light Fixtures',
+          url: '/collections/light-fixtures',
+        },
+      ],
     },
     {
       id: 'outdoor',
       title: 'Outdoor',
       url: '/collections/outdoor',
+      subItems: [
+        {
+          id: 'planters',
+          title: 'Planters',
+          url: '/collections/planters',
+        },
+      ],
     },
   ];
 

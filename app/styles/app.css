@@ -785,8 +785,12 @@ button.reset:hover:not(:has(> *)) {
 .collections-grid {
   display: grid;
   grid-gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--grid-item-width), var(--grid-item-width))
+  );
   margin-bottom: 2rem;
+  justify-content: start;
 }
 
 .collection-item img {
@@ -809,8 +813,12 @@ button.reset:hover:not(:has(> *)) {
 .products-grid {
   display: grid;
   grid-gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--grid-item-width), var(--grid-item-width))
+  );
   margin-bottom: 2rem;
+  justify-content: start;
 }
 
 .product-item img {
@@ -887,8 +895,12 @@ button.reset:hover:not(:has(> *)) {
 .blog-grid {
   display: grid;
   grid-gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--grid-item-width), var(--grid-item-width))
+  );
   margin-bottom: 2rem;
+  justify-content: start;
 }
 
 .blog-article-image {
@@ -1261,8 +1273,8 @@ button.reset:hover:not(:has(> *)) {
   left: 50%;
   transform: translateX(-50%);
   background: white;
-  min-width: 200px;
-  padding: 0.5rem 0;
+  min-width: 280px;
+  padding: 0.75rem 0;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   margin-top: 0.5rem;
@@ -1290,6 +1302,68 @@ button.reset:hover:not(:has(> *)) {
   height: 10px;
 }
 
+.header-dropdown-section {
+  margin-bottom: 0.5rem;
+}
+
+.header-dropdown-section:last-child {
+  margin-bottom: 0;
+}
+
+.header-dropdown-category {
+  display: block;
+  padding: 0.75rem 1.5rem;
+  color: #000;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  border-bottom: 1px solid #f0f0f0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.header-dropdown-category:hover {
+  background: #f8f8f8;
+  color: #000;
+}
+
+.header-dropdown-subitems {
+  background: #fafafa;
+}
+
+.header-dropdown-subitem {
+  display: block;
+  padding: 0.5rem 1.5rem 0.5rem 2.5rem;
+  color: #555;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 400;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  position: relative;
+}
+
+.header-dropdown-subitem:before {
+  content: '•';
+  position: absolute;
+  left: 2rem;
+  color: #999;
+  font-size: 0.8rem;
+}
+
+.header-dropdown-subitem:hover {
+  background: #f0f0f0;
+  color: #000;
+  padding-left: 2.75rem;
+}
+
+.header-dropdown-subitem:hover:before {
+  color: #000;
+}
+
+/* Legacy styles for non-hierarchical dropdowns */
 .header-dropdown-item {
   display: block;
   padding: 0.5rem 1.5rem;

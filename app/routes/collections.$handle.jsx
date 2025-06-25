@@ -21,6 +21,7 @@ export const meta = ({data}) => {
 // Collection-specific content
 const getCollectionContent = (handle) => {
   const collectionData = {
+    // Main categories
     kitchen: {
       title: 'Kitchen Collection',
       subtitle: 'Transform Your Culinary Space',
@@ -48,6 +49,63 @@ const getCollectionContent = (handle) => {
       description:
         'Extend luxury beyond your home with our weather-resistant outdoor marble collection. Perfect for patios, outdoor kitchens, and garden features that withstand the elements.',
       hero: 'Bring indoor luxury to your outdoor spaces with durable marble designed for every season.',
+    },
+
+    // Kitchen sub-categories
+    'cutting-boards': {
+      title: 'Cutting Boards',
+      subtitle: 'Artisan Kitchen Essentials',
+      description:
+        'Elevate your culinary preparation with our handcrafted marble cutting boards. Each piece combines functionality with stunning natural beauty, creating kitchen tools that are as elegant as they are practical.',
+      hero: 'Transform meal preparation into an art form with cutting boards that blend durability with timeless sophistication.',
+    },
+    bowls: {
+      title: 'Bowls Collection',
+      subtitle: 'Elegant Serving Solutions',
+      description:
+        'Discover our collection of hand-carved marble bowls, perfect for both everyday use and special occasions. Each bowl showcases the natural beauty of stone while providing exceptional functionality.',
+      hero: 'Serve in style with bowls that bring natural elegance to every meal and gathering.',
+    },
+
+    // Bathroom sub-categories
+    'soap-dishes': {
+      title: 'Soap Dishes',
+      subtitle: 'Bathroom Luxury Details',
+      description:
+        'Complete your bathroom sanctuary with our elegant marble soap dishes. These carefully crafted accessories add a touch of luxury to your daily routine while providing practical functionality.',
+      hero: 'Transform everyday moments into luxurious experiences with sophisticated soap dishes.',
+    },
+    'waste-baskets': {
+      title: 'Waste Baskets',
+      subtitle: 'Functional Bathroom Elegance',
+      description:
+        "Our marble waste baskets combine practical necessity with refined aesthetics. These elegant bathroom accessories ensure that even the most utilitarian items contribute to your space's sophisticated design.",
+      hero: 'Maintain the beauty of your bathroom sanctuary with waste baskets that complement your refined taste.',
+    },
+
+    // Living Room sub-categories
+    'coffee-tables': {
+      title: 'Coffee Tables',
+      subtitle: 'Living Room Centerpieces',
+      description:
+        'Anchor your living space with our stunning marble coffee tables. Each piece serves as both functional furniture and sculptural art, creating a focal point that defines sophisticated living.',
+      hero: 'Make a statement with coffee tables that blend architectural beauty with everyday functionality.',
+    },
+    'light-fixtures': {
+      title: 'Light Fixtures',
+      subtitle: 'Illuminated Elegance',
+      description:
+        'Cast beautiful light through our marble light fixtures, where natural stone meets modern illumination. These unique pieces create ambient lighting while serving as stunning decorative elements.',
+      hero: 'Illuminate your space with fixtures that transform light into living art.',
+    },
+
+    // Outdoor sub-categories
+    planters: {
+      title: 'Planters',
+      subtitle: 'Garden Sophistication',
+      description:
+        'Bring elegance to your outdoor spaces with our weather-resistant marble planters. These statement pieces provide the perfect foundation for your plants while adding architectural interest to patios, gardens, and terraces.',
+      hero: 'Cultivate beauty in your outdoor spaces with planters that elevate both your plants and your landscape design.',
     },
   };
 
@@ -90,12 +148,54 @@ async function loadCriticalData({context, params, request}) {
     throw redirect('/collections');
   }
 
-  const [{collection}] = await Promise.all([
-    storefront.query(COLLECTION_QUERY, {
+  // Define sub-category to parent category mapping
+  const subCategoryMap = {
+    'cutting-boards': 'kitchen',
+    bowls: 'kitchen',
+    'soap-dishes': 'bathroom',
+    'waste-baskets': 'bathroom',
+    'coffee-tables': 'living',
+    'light-fixtures': 'living',
+    planters: 'outdoor',
+  };
+
+  let collection = null;
+  let fallbackHandle = null;
+
+  try {
+    // Try to fetch the specific collection first
+    const result = await storefront.query(COLLECTION_QUERY, {
       variables: {handle, ...paginationVariables},
-      // Add other queries here, so that they are loaded in parallel
-    }),
-  ]);
+    });
+    collection = result.collection;
+  } catch {
+    console.log(`Collection ${handle} not found, trying fallback...`);
+  }
+
+  // If collection doesn't exist and it's a sub-category, try the parent category
+  if (!collection && subCategoryMap[handle]) {
+    fallbackHandle = subCategoryMap[handle];
+    try {
+      const fallbackResult = await storefront.query(COLLECTION_QUERY, {
+        variables: {handle: fallbackHandle, ...paginationVariables},
+      });
+      collection = fallbackResult.collection;
+    } catch {
+      console.log(`Fallback collection ${fallbackHandle} also not found`);
+    }
+  }
+
+  // If still no collection found, try 'all' as final fallback
+  if (!collection) {
+    try {
+      const allResult = await storefront.query(COLLECTION_QUERY, {
+        variables: {handle: 'all', ...paginationVariables},
+      });
+      collection = allResult.collection;
+    } catch {
+      console.log('All collections fallback also failed');
+    }
+  }
 
   if (!collection) {
     throw new Response(`Collection ${handle} not found`, {
@@ -106,6 +206,8 @@ async function loadCriticalData({context, params, request}) {
   return {
     collection,
     collectionContent: getCollectionContent(handle),
+    isSubCategory: !!subCategoryMap[handle],
+    parentCategory: subCategoryMap[handle],
   };
 }
 
@@ -127,7 +229,8 @@ const containerStyle = {
 
 export default function Collection() {
   /** @type {LoaderReturnData} */
-  const {collection, collectionContent} = useLoaderData();
+  const {collection, collectionContent, isSubCategory, parentCategory} =
+    useLoaderData();
 
   return (
     <div className="collection">
@@ -173,6 +276,17 @@ export default function Collection() {
               margin: 0 auto;
             }
             
+            .collection-fallback-notice {
+              background: #fff9c4;
+              border: 1px solid #ffd700;
+              border-radius: 4px;
+              padding: 1rem;
+              margin: 2rem auto;
+              max-width: 600px;
+              color: #8b7400;
+              font-size: 0.9rem;
+            }
+            
             @media (max-width: 768px) {
               .collection-header {
                 padding: 4rem 0;
@@ -192,6 +306,16 @@ export default function Collection() {
         <div className="subtitle">{collectionContent.subtitle}</div>
         <p className="hero-text">{collectionContent.hero}</p>
         <p className="description">{collectionContent.description}</p>
+        {isSubCategory && (
+          <div className="collection-fallback-notice">
+            <p>
+              <strong>Note:</strong> We&apos;re currently building our specific{' '}
+              {collectionContent.title.toLowerCase()} collection. In the
+              meantime, explore our {parentCategory} collection below to
+              discover relevant products.
+            </p>
+          </div>
+        )}
       </div>
 
       <div style={containerStyle}>

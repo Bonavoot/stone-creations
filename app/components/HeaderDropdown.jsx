@@ -8,6 +8,11 @@ import {NavLink} from '@remix-run/react';
  *     id: string;
  *     title: string;
  *     url: string;
+ *     subItems?: Array<{
+ *       id: string;
+ *       title: string;
+ *       url: string;
+ *     }>;
  *   }>;
  *   primaryDomainUrl: string;
  *   publicStoreDomain: string;
@@ -47,6 +52,18 @@ export function HeaderDropdown({
     }
   };
 
+  const normalizeUrl = (url) => {
+    if (!url) return '';
+    if (
+      url.includes('myshopify.com') ||
+      url.includes(publicStoreDomain) ||
+      url.includes(primaryDomainUrl)
+    ) {
+      return new URL(url).pathname;
+    }
+    return url;
+  };
+
   return (
     <div
       className="header-dropdown"
@@ -77,16 +94,31 @@ export function HeaderDropdown({
         >
           {items.map((item) => {
             if (!item.url) return null;
-            const url =
-              item.url.includes('myshopify.com') ||
-              item.url.includes(publicStoreDomain) ||
-              item.url.includes(primaryDomainUrl)
-                ? new URL(item.url).pathname
-                : item.url;
+
+            const itemUrl = normalizeUrl(item.url);
+
             return (
-              <NavLink key={item.id} to={url} className="header-dropdown-item">
-                {item.title}
-              </NavLink>
+              <div key={item.id} className="header-dropdown-section">
+                <NavLink to={itemUrl} className="header-dropdown-category">
+                  {item.title}
+                </NavLink>
+                {item.subItems && item.subItems.length > 0 && (
+                  <div className="header-dropdown-subitems">
+                    {item.subItems.map((subItem) => {
+                      const subItemUrl = normalizeUrl(subItem.url);
+                      return (
+                        <NavLink
+                          key={subItem.id}
+                          to={subItemUrl}
+                          className="header-dropdown-subitem"
+                        >
+                          {subItem.title}
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>

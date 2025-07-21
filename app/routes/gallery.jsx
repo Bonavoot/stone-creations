@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import {NavLink} from '@remix-run/react';
 
-export default function Showroom() {
+export default function Gallery() {
   const [activeCategory, setActiveCategory] = useState('all');
 
   const categories = [
@@ -18,7 +18,7 @@ export default function Showroom() {
       title: 'Modern Kitchen Island',
       category: 'kitchen',
       description: 'Custom marble kitchen island with waterfall edges',
-      image: '/images/showroom/kitchen-1.jpg',
+      image: '/images/gallery/kitchen-1.jpg',
       location: 'Beverly Hills, CA',
     },
     {
@@ -26,7 +26,7 @@ export default function Showroom() {
       title: 'Luxury Bathroom Suite',
       category: 'bathroom',
       description: 'Full marble bathroom renovation with custom fixtures',
-      image: '/images/showroom/bathroom-1.jpg',
+      image: '/images/gallery/bathroom-1.jpg',
       location: 'Manhattan, NY',
     },
     {
@@ -34,7 +34,7 @@ export default function Showroom() {
       title: 'Living Room Fireplace',
       category: 'living',
       description: 'Custom marble fireplace surround with intricate detailing',
-      image: '/images/showroom/living-1.jpg',
+      image: '/images/gallery/living-1.jpg',
       location: 'Miami, FL',
     },
     {
@@ -42,7 +42,7 @@ export default function Showroom() {
       title: 'Outdoor Kitchen',
       category: 'outdoor',
       description: 'Weather-resistant marble outdoor kitchen installation',
-      image: '/images/showroom/outdoor-1.jpg',
+      image: '/images/gallery/outdoor-1.jpg',
       location: 'Malibu, CA',
     },
     // Add more projects as needed
@@ -54,17 +54,17 @@ export default function Showroom() {
       : projects.filter((project) => project.category === activeCategory);
 
   return (
-    <div className="showroom">
-      <div className="showroom-hero">
-        <h1>Our Showroom</h1>
+    <div className="gallery">
+      <div className="gallery-hero">
+        <h1>Our Gallery</h1>
         <p>Explore our curated collection of custom marble installations</p>
       </div>
 
-      <div className="showroom-categories">
+      <div className="gallery-categories">
         {categories.map((category) => (
           <button
             key={category.id}
-            className={`showroom-category ${
+            className={`gallery-category ${
               activeCategory === category.id ? 'active' : ''
             }`}
             onClick={() => setActiveCategory(category.id)}
@@ -74,25 +74,25 @@ export default function Showroom() {
         ))}
       </div>
 
-      <div className="showroom-grid">
+      <div className="gallery-grid">
         {filteredProjects.map((project) => (
-          <div key={project.id} className="showroom-item">
-            <div className="showroom-item-image">
+          <div key={project.id} className="gallery-item">
+            <div className="gallery-item-image">
               <img src={project.image} alt={project.title} />
             </div>
-            <div className="showroom-item-content">
+            <div className="gallery-item-content">
               <h3>{project.title}</h3>
               <p>{project.description}</p>
-              <span className="showroom-item-location">{project.location}</span>
+              <span className="gallery-item-location">{project.location}</span>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="showroom-cta">
+      <div className="gallery-cta">
         <h2>Ready to Create Your Masterpiece?</h2>
         <p>Schedule a consultation with our design experts</p>
-        <NavLink to="/contact" className="showroom-cta-button">
+        <NavLink to="/contact" className="gallery-cta-button">
           Schedule Consultation
         </NavLink>
       </div>

@@ -119,24 +119,6 @@ export function HeaderMenu({
     },
   ];
 
-  const showroomItems = [
-    {
-      id: 'residential',
-      title: 'Residential Projects',
-      url: '/showroom/residential',
-    },
-    {
-      id: 'commercial',
-      title: 'Commercial Projects',
-      url: '/showroom/commercial',
-    },
-    {
-      id: 'featured',
-      title: 'Featured Installations',
-      url: '/showroom/featured',
-    },
-  ];
-
   return (
     <nav className={className} role="navigation">
       {viewport === 'mobile' && (
@@ -169,16 +151,23 @@ export function HeaderMenu({
           );
         }
 
-        // Handle Showroom dropdown
-        if (item.title.toLowerCase() === 'showroom') {
+        // Handle Gallery/Showroom as regular menu item (no dropdown)
+        if (
+          item.title.toLowerCase() === 'gallery' ||
+          item.title.toLowerCase() === 'showroom'
+        ) {
           return (
-            <HeaderDropdown
+            <NavLink
+              className="header-menu-item"
+              end
               key={item.id}
-              title={item.title.toUpperCase()}
-              items={showroomItems}
-              primaryDomainUrl={primaryDomainUrl}
-              publicStoreDomain={publicStoreDomain}
-            />
+              onClick={close}
+              prefetch="intent"
+              style={activeLinkStyle}
+              to="/gallery"
+            >
+              GALLERY
+            </NavLink>
           );
         }
 
@@ -337,12 +326,12 @@ const FALLBACK_HEADER_MENU = {
       items: [],
     },
     {
-      id: 'gid://shopify/MenuItem/showroom',
+      id: 'gid://shopify/MenuItem/gallery',
       resourceId: null,
       tags: [],
-      title: 'Showroom',
+      title: 'Gallery',
       type: 'HTTP',
-      url: '/showroom',
+      url: '/gallery',
       items: [],
     },
     {

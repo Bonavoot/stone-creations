@@ -32,7 +32,7 @@ export default function ContactPage() {
       <div className="contact-content">
         <div className="contact-info">
           <div className="contact-info-section">
-            <h3>Visit Our Showroom</h3>
+            <h3>Visit Our Gallery</h3>
             <p>11 Old Dock Road</p>
             <p>Yaphank, NY 11980</p>
             <p>United States</p>

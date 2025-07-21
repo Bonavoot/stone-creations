@@ -76,7 +76,7 @@ export function HeaderDropdown({
         to={
           title.toLowerCase() === 'collections'
             ? '/collections/all'
-            : '/showroom'
+            : '/gallery'
         }
         style={({isActive}) => ({
           fontWeight: isActive ? '600' : '400',

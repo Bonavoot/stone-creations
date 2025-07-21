@@ -22,6 +22,11 @@ export default async function handleRequest(
       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
     },
+    // Add ngrok domain for local development
+    connectSrc:
+      process.env.NODE_ENV === 'development'
+        ? ['wss://*.ngrok-free.app:*', 'https://*.ngrok-free.app']
+        : undefined,
   });
 
   const body = await renderToReadableStream(

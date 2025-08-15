@@ -117,6 +117,18 @@ export function HeaderMenu({
         },
       ],
     },
+    {
+      id: 'barware',
+      title: 'Barware',
+      url: '/collections/barware',
+      subItems: [
+        {
+          id: 'coasters',
+          title: 'Coasters',
+          url: '/collections/coasters',
+        },
+      ],
+    },
   ];
 
   return (

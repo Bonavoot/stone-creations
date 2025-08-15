@@ -50,6 +50,13 @@ const getCollectionContent = (handle) => {
         'Extend luxury beyond your home with our weather-resistant outdoor marble collection. Perfect for patios, outdoor kitchens, and garden features that withstand the elements.',
       hero: 'Bring indoor luxury to your outdoor spaces with durable marble designed for every season.',
     },
+    barware: {
+      title: 'Barware Collection',
+      subtitle: 'Refined Entertaining Essentials',
+      description:
+        'Elevate your home bar with artisanal marble accessories designed for sophisticated entertaining. From coasters to bar tools, explore pieces that balance elegance and function.',
+      hero: 'Host beautifully with barware that adds a polished, modern touch to every pour.',
+    },
 
     // Kitchen sub-categories
     'cutting-boards': {
@@ -65,6 +72,14 @@ const getCollectionContent = (handle) => {
       description:
         'Discover our collection of hand-carved marble bowls, perfect for both everyday use and special occasions. Each bowl showcases the natural beauty of stone while providing exceptional functionality.',
       hero: 'Serve in style with bowls that bring natural elegance to every meal and gathering.',
+    },
+    // Barware sub-categories
+    coasters: {
+      title: 'Coasters',
+      subtitle: 'Protective Elegance',
+      description:
+        'Protect surfaces in style with premium marble coasters. Thoughtfully crafted to be both durable and visually striking, they’re an essential detail for any bar or living space.',
+      hero: 'Add a refined finish to every setting with coasters that combine practicality and design.',
     },
 
     // Bathroom sub-categories
@@ -152,6 +167,7 @@ async function loadCriticalData({context, params, request}) {
   const subCategoryMap = {
     'cutting-boards': 'kitchen',
     bowls: 'kitchen',
+    coasters: 'barware',
     'soap-dishes': 'bathroom',
     'waste-baskets': 'bathroom',
     'coffee-tables': 'living',

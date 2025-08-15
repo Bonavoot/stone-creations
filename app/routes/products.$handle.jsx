@@ -50,20 +50,34 @@ async function loadCriticalData({context, params, request}) {
     throw new Error('Expected product handle to be defined');
   }
 
-  const [{product}] = await Promise.all([
-    storefront.query(PRODUCT_QUERY, {
-      variables: {handle, selectedOptions: getSelectedProductOptions(request)},
-    }),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+  const tryHandles = [
+    handle,
+    // common singular/plural/slug variants
+    handle.replace(/s$/, ''),
+    handle.replace(/-s$/, ''),
+    handle.replace(/-and-/, '-&-'),
+    handle.replace(/&/g, 'and'),
+  ].filter((h, idx, arr) => !!h && arr.indexOf(h) === idx);
+
+  let product = null;
+  for (const h of tryHandles) {
+    const result = await storefront.query(PRODUCT_QUERY, {
+      variables: {
+        handle: h,
+        selectedOptions: getSelectedProductOptions(request),
+      },
+    });
+    if (result?.product?.id) {
+      product = result.product;
+      break;
+    }
+  }
 
   if (!product?.id) {
     throw new Response(null, {status: 404});
   }
 
-  return {
-    product,
-  };
+  return {product};
 }
 
 /**

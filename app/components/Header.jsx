@@ -62,12 +62,22 @@ export function HeaderMenu({
         {
           id: 'cutting-boards',
           title: 'Cutting Boards',
-          url: '/collections/cutting-boards',
+          url: '/products/cutting-board',
         },
         {
           id: 'bowls',
           title: 'Bowls',
-          url: '/collections/bowls',
+          url: '/products/bowl',
+        },
+        {
+          id: 'mortar-and-pestle',
+          title: 'Mortar & Pestle',
+          url: '/products/mortar-and-pestle',
+        },
+        {
+          id: 'rolling-pins',
+          title: 'Rolling Pins',
+          url: '/products/rolling-pin',
         },
       ],
     },
@@ -79,12 +89,22 @@ export function HeaderMenu({
         {
           id: 'soap-dishes',
           title: 'Soap Dishes',
-          url: '/collections/soap-dishes',
+          url: '/products/soap-dish',
         },
         {
           id: 'waste-baskets',
           title: 'Waste Baskets',
-          url: '/collections/waste-baskets',
+          url: '/products/waste-basket',
+        },
+        {
+          id: 'marble-toothbrush-holders',
+          title: 'Toothbrush Holder',
+          url: '/products/marble-toothbrush-holder',
+        },
+        {
+          id: 'countertop-trays',
+          title: 'Countertop Tray',
+          url: '/products/countertop-tray',
         },
       ],
     },
@@ -96,12 +116,22 @@ export function HeaderMenu({
         {
           id: 'coffee-tables',
           title: 'Coffee Tables',
-          url: '/collections/coffee-tables',
+          url: '/products/coffee-table',
         },
         {
           id: 'light-fixtures',
           title: 'Light Fixtures',
-          url: '/collections/light-fixtures',
+          url: '/products/light-fixture',
+        },
+        {
+          id: 'marble-bookends',
+          title: 'Bookends',
+          url: '/products/marble-bookends',
+        },
+        {
+          id: 'marble-side-tables',
+          title: 'Side Table',
+          url: '/products/marble-side-table',
         },
       ],
     },
@@ -113,7 +143,17 @@ export function HeaderMenu({
         {
           id: 'planters',
           title: 'Planters',
-          url: '/collections/planters',
+          url: '/products/planter',
+        },
+        {
+          id: 'garden-benches',
+          title: 'Garden Bench',
+          url: '/products/garden-bench',
+        },
+        {
+          id: 'bird-baths',
+          title: 'Bird Bath',
+          url: '/products/bird-bath',
         },
       ],
     },
@@ -125,7 +165,12 @@ export function HeaderMenu({
         {
           id: 'coasters',
           title: 'Coasters',
-          url: '/collections/coasters',
+          url: '/products/coasters',
+        },
+        {
+          id: 'serving-boards',
+          title: 'Serving Board',
+          url: '/products/serving-board',
         },
       ],
     },

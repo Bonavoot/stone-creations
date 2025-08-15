@@ -165,14 +165,32 @@ async function loadCriticalData({context, params, request}) {
 
   // Define sub-category to parent category mapping
   const subCategoryMap = {
+    // Kitchen
     'cutting-boards': 'kitchen',
     bowls: 'kitchen',
+    'mortar-and-pestle': 'kitchen',
+    'rolling-pins': 'kitchen',
+
+    // Barware
     coasters: 'barware',
+    'serving-boards': 'barware',
+
+    // Bathroom
     'soap-dishes': 'bathroom',
     'waste-baskets': 'bathroom',
+    'marble-toothbrush-holders': 'bathroom',
+    'countertop-trays': 'bathroom',
+
+    // Living Room
     'coffee-tables': 'living',
     'light-fixtures': 'living',
+    'marble-bookends': 'living',
+    'marble-side-tables': 'living',
+
+    // Outdoor
     planters: 'outdoor',
+    'garden-benches': 'outdoor',
+    'bird-baths': 'outdoor',
   };
 
   let collection = null;

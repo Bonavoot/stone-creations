@@ -60,3 +60,4 @@ const PAGINATE_PRODUCTS_QUERY = `#graphql
     }
   }
 `;
+

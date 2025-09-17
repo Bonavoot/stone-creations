@@ -1,4 +1,4 @@
-import {useLoaderData, Link} from '@remix-run/react';
+import {useLoaderData, Link, useFetcher} from '@remix-run/react';
 import {Image, Money} from '@shopify/hydrogen';
 import React from 'react';
 
@@ -88,10 +88,6 @@ function HeroBanner() {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       setScrollY(currentScrollY);
-      // Temporary debug log - remove after testing
-      if (currentScrollY > 0 && currentScrollY % 50 === 0) {
-        console.log('Scroll position:', currentScrollY);
-      }
     };
 
     // Check if we can access window (client-side only)
@@ -323,10 +319,43 @@ function FeaturedCollection({collection}) {
 
 /**
  * @param {{
- *   products: Promise<RecommendedProductsQuery | null>;
+ *   products: RecommendedProductsQuery | null;
  * }}
  */
 function RecommendedProducts({products}) {
+  const fetcher = useFetcher();
+  const [productNodes, setProductNodes] = React.useState(products?.nodes ?? []);
+  const [endCursor, setEndCursor] = React.useState(
+    products?.pageInfo?.endCursor ?? null,
+  );
+  const [hasNextPage, setHasNextPage] = React.useState(
+    products?.pageInfo?.hasNextPage ?? false,
+  );
+
+  React.useEffect(() => {
+    setProductNodes(products?.nodes ?? []);
+    setEndCursor(products?.pageInfo?.endCursor ?? null);
+    setHasNextPage(products?.pageInfo?.hasNextPage ?? false);
+  }, [products]);
+
+  React.useEffect(() => {
+    if (fetcher.data?.products) {
+      const newNodes = fetcher.data.products.nodes ?? [];
+      setProductNodes((prev) => [...prev, ...newNodes]);
+      setEndCursor(fetcher.data.products.pageInfo?.endCursor ?? null);
+      setHasNextPage(fetcher.data.products.pageInfo?.hasNextPage ?? false);
+    }
+  }, [fetcher.data]);
+
+  const isLoadingMore = fetcher.state !== 'idle';
+
+  function handleLoadMore() {
+    if (!hasNextPage || isLoadingMore) return;
+    const params = new URLSearchParams();
+    if (endCursor) params.set('after', endCursor);
+    fetcher.load(`/api/products?${params.toString()}`);
+  }
+
   return (
     <div className="recommended-products" style={{textAlign: 'center'}}>
       <style>
@@ -373,13 +402,31 @@ function RecommendedProducts({products}) {
             color: #666;
             font-size: 0.9rem;
           }
+
+          .load-more-btn {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.875rem 1.5rem;
+            background-color: black;
+            color: white;
+            border: none;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: opacity 0.2s ease;
+          }
+
+          .load-more-btn[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
         `}
       </style>
 
       <h2>Curated Selection</h2>
       <div className="recommended-products-grid">
-        {products?.nodes?.length > 0 ? (
-          products.nodes.map((product) => (
+        {productNodes?.length > 0 ? (
+          productNodes.map((product) => (
             <Link
               key={product.id}
               className="recommended-product"
@@ -400,6 +447,17 @@ function RecommendedProducts({products}) {
           <div>No products available</div>
         )}
       </div>
+      {hasNextPage && (
+        <div>
+          <button
+            className="load-more-btn"
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore ? 'Loading…' : 'Show more'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -642,6 +700,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
     products(first: 4, sortKey: UPDATED_AT, reverse: true) {
       nodes {
         ...RecommendedProduct
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
   }

@@ -22,11 +22,18 @@ export default async function handleRequest(
       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
     },
-    // Add ngrok domain for local development
+    // Allow same-origin connections and dev tunneling; extend style/font for Google Fonts
     connectSrc:
       process.env.NODE_ENV === 'development'
-        ? ['wss://*.ngrok-free.app:*', 'https://*.ngrok-free.app']
-        : undefined,
+        ? ["'self'", 'wss://*.ngrok-free.app:*', 'https://*.ngrok-free.app']
+        : ["'self'"],
+    styleSrc: [
+      "'self'",
+      "'unsafe-inline'",
+      'https://cdn.shopify.com',
+      'https://fonts.googleapis.com',
+    ],
+    fontSrc: ["'self'", 'https://cdn.shopify.com', 'https://fonts.gstatic.com'],
   });
 
   const body = await renderToReadableStream(

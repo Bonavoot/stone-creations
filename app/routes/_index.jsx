@@ -1,6 +1,8 @@
 import {useLoaderData, Link, useFetcher} from '@remix-run/react';
 import {Image, Money} from '@shopify/hydrogen';
 import React from 'react';
+import masterCraftsmanship from '~/assets/master-craftsmanship.jpg';
+import precisionEngineering from '~/assets/precision-engineering.jpg';
 
 /**
  * @type {MetaFunction}
@@ -633,16 +635,10 @@ function CraftsmanshipSection() {
 
           <div className="craftsmanship-grid">
             <div className="craftsmanship-item">
-              <img
-                src="app/assets/master-craftsmanship.jpg"
-                alt="Master Craftsmanship"
-              />
+              <img src={masterCraftsmanship} alt="Master Craftsmanship" />
             </div>
             <div className="craftsmanship-item">
-              <img
-                src="app/assets/precision-engineering.jpg"
-                alt="Precision Engineering"
-              />
+              <img src={precisionEngineering} alt="Precision Engineering" />
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
 import {User, ShoppingCart, Search, Menu} from 'lucide-react';
 import {HeaderDropdown} from './HeaderDropdown';
+import phLogo from '~/assets/ph-logo.png';
 
 /**
  * @param {HeaderProps}
@@ -18,8 +19,8 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
       <div className="header-content">
         <NavLink prefetch="intent" to="/" className="logo" end>
           <img
-            src="/logo-text-version.png"
-            alt="Carved & Co."
+            src={phLogo}
+            alt="Polished and Honed"
             style={{height: '140px', width: 'auto'}}
           />
         </NavLink>

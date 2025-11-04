@@ -203,7 +203,7 @@ async function loadCriticalData({context, params, request}) {
     });
     collection = result.collection;
   } catch {
-    console.log(`Collection ${handle} not found, trying fallback...`);
+    console.warn(`Collection ${handle} not found, trying fallback...`);
   }
 
   // If collection doesn't exist and it's a sub-category, try the parent category
@@ -215,7 +215,7 @@ async function loadCriticalData({context, params, request}) {
       });
       collection = fallbackResult.collection;
     } catch {
-      console.log(`Fallback collection ${fallbackHandle} also not found`);
+      console.warn(`Fallback collection ${fallbackHandle} also not found`);
     }
   }
 
@@ -227,7 +227,7 @@ async function loadCriticalData({context, params, request}) {
       });
       collection = allResult.collection;
     } catch {
-      console.log('All collections fallback also failed');
+      console.warn('All collections fallback also failed');
     }
   }
 
@@ -235,6 +235,39 @@ async function loadCriticalData({context, params, request}) {
     throw new Response(`Collection ${handle} not found`, {
       status: 404,
     });
+  }
+
+  // Ensure specific products appear in certain collections even if not assigned in Shopify
+  // Currently: ensure the waste-basket product appears in the bathroom collection listing
+  if (handle === 'bathroom') {
+    try {
+      const existingHandles = new Set(
+        (collection.products?.nodes ?? []).map((p) => p.handle),
+      );
+      if (!existingHandles.has('waste-basket')) {
+        const PRODUCT_BY_HANDLE_FOR_COLLECTION = `#graphql
+          ${PRODUCT_ITEM_FRAGMENT}
+          query ProductForCollection($handle: String!, $country: CountryCode, $language: LanguageCode) @inContext(country: $country, language: $language) {
+            product(handle: $handle) { ...ProductItem }
+          }
+        `;
+        const extra = await storefront.query(PRODUCT_BY_HANDLE_FOR_COLLECTION, {
+          variables: {handle: 'waste-basket'},
+        });
+        const extraProduct = extra?.product;
+        if (extraProduct?.id) {
+          collection = {
+            ...collection,
+            products: {
+              ...collection.products,
+              nodes: [...(collection.products?.nodes ?? []), extraProduct],
+            },
+          };
+        }
+      }
+    } catch {
+      console.warn('Failed to augment bathroom collection with waste-basket');
+    }
   }
 
   return {

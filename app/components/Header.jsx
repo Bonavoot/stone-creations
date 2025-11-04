@@ -70,16 +70,6 @@ export function HeaderMenu({
           title: 'Bowls',
           url: '/products/bowl',
         },
-        {
-          id: 'mortar-and-pestle',
-          title: 'Mortar & Pestle',
-          url: '/products/mortar-and-pestle',
-        },
-        {
-          id: 'rolling-pins',
-          title: 'Rolling Pins',
-          url: '/products/rolling-pin',
-        },
       ],
     },
     {
@@ -118,11 +108,6 @@ export function HeaderMenu({
           id: 'coffee-tables',
           title: 'Coffee Tables',
           url: '/products/coffee-table',
-        },
-        {
-          id: 'light-fixtures',
-          title: 'Light Fixtures',
-          url: '/products/light-fixture',
         },
         {
           id: 'marble-bookends',

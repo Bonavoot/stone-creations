@@ -4,6 +4,8 @@ import {NavLink} from '@remix-run/react';
 export default function Gallery() {
   const [activeCategory, setActiveCategory] = useState('all');
 
+  const placeholderImage = '/landing-page-kitchen.png';
+
   const categories = [
     {id: 'all', name: 'All'},
     {id: 'kitchen', name: 'Kitchen'},
@@ -18,7 +20,7 @@ export default function Gallery() {
       title: 'Modern Kitchen Island',
       category: 'kitchen',
       description: 'Custom marble kitchen island with waterfall edges',
-      image: '/images/gallery/kitchen-1.jpg',
+      image: placeholderImage,
       location: 'Beverly Hills, CA',
     },
     {
@@ -26,7 +28,7 @@ export default function Gallery() {
       title: 'Luxury Bathroom Suite',
       category: 'bathroom',
       description: 'Full marble bathroom renovation with custom fixtures',
-      image: '/images/gallery/bathroom-1.jpg',
+      image: placeholderImage,
       location: 'Manhattan, NY',
     },
     {
@@ -34,7 +36,7 @@ export default function Gallery() {
       title: 'Living Room Fireplace',
       category: 'living',
       description: 'Custom marble fireplace surround with intricate detailing',
-      image: '/images/gallery/living-1.jpg',
+      image: placeholderImage,
       location: 'Miami, FL',
     },
     {
@@ -42,7 +44,7 @@ export default function Gallery() {
       title: 'Outdoor Kitchen',
       category: 'outdoor',
       description: 'Weather-resistant marble outdoor kitchen installation',
-      image: '/images/gallery/outdoor-1.jpg',
+      image: placeholderImage,
       location: 'Malibu, CA',
     },
     // Add more projects as needed
@@ -78,7 +80,16 @@ export default function Gallery() {
         {filteredProjects.map((project) => (
           <div key={project.id} className="gallery-item">
             <div className="gallery-item-image">
-              <img src={project.image} alt={project.title} />
+              <img
+                src={project.image}
+                alt={project.title}
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = placeholderImage;
+                }}
+              />
             </div>
             <div className="gallery-item-content">
               <h3>{project.title}</h3>

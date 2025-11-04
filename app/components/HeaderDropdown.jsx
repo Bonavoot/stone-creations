@@ -1,4 +1,4 @@
-import {useState, useRef} from 'react';
+import {useState, useRef, useEffect} from 'react';
 import {NavLink} from '@remix-run/react';
 
 /**
@@ -26,6 +26,7 @@ export function HeaderDropdown({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [productExistsMap, setProductExistsMap] = useState({});
 
   const handleMouseEnter = () => {
     setIsOpen(true);
@@ -63,6 +64,53 @@ export function HeaderDropdown({
     }
     return url;
   };
+
+  useEffect(() => {
+    // Collect unique product handles from subItems
+    const handles = new Set();
+    items.forEach((item) => {
+      (item.subItems || []).forEach((sub) => {
+        const raw = sub?.url || '';
+        const idx = raw.indexOf('/products/');
+        if (idx !== -1) {
+          const after = raw.slice(idx + '/products/'.length);
+          const handle = after.split('/')[0];
+          if (handle) handles.add(handle);
+        }
+      });
+    });
+
+    if (handles.size === 0) return;
+
+    let isCancelled = false;
+
+    (async () => {
+      const entries = await Promise.all(
+        Array.from(handles).map(async (handle) => {
+          try {
+            const res = await fetch(
+              `/api/product-exists?handle=${encodeURIComponent(handle)}`,
+            );
+            const data = await res.json();
+            return [handle, Boolean(data?.exists)];
+          } catch {
+            return [handle, false];
+          }
+        }),
+      );
+      if (!isCancelled) {
+        const nextMap = {};
+        entries.forEach(([h, ok]) => {
+          nextMap[h] = ok;
+        });
+        setProductExistsMap(nextMap);
+      }
+    })();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [items, primaryDomainUrl, publicStoreDomain]);
 
   return (
     <div
@@ -104,18 +152,30 @@ export function HeaderDropdown({
                 </NavLink>
                 {item.subItems && item.subItems.length > 0 && (
                   <div className="header-dropdown-subitems">
-                    {item.subItems.map((subItem) => {
-                      const subItemUrl = normalizeUrl(subItem.url);
-                      return (
-                        <NavLink
-                          key={subItem.id}
-                          to={subItemUrl}
-                          className="header-dropdown-subitem"
-                        >
-                          {subItem.title}
-                        </NavLink>
-                      );
-                    })}
+                    {item.subItems
+                      .filter((subItem) => {
+                        const subItemUrl = normalizeUrl(subItem.url);
+                        if (!subItemUrl.startsWith('/products/')) return true;
+                        const handle = subItemUrl
+                          .split('/products/')[1]
+                          ?.split('/')[0];
+                        if (!handle) return false;
+                        const exists = productExistsMap[handle];
+                        // Default to showing until we know; remove when confirmed false
+                        return exists !== false;
+                      })
+                      .map((subItem) => {
+                        const subItemUrl = normalizeUrl(subItem.url);
+                        return (
+                          <NavLink
+                            key={subItem.id}
+                            to={subItemUrl}
+                            className="header-dropdown-subitem"
+                          >
+                            {subItem.title}
+                          </NavLink>
+                        );
+                      })}
                   </div>
                 )}
               </div>

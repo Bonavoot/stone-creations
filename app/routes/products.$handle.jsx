@@ -1,4 +1,4 @@
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData, Link} from '@remix-run/react';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -7,6 +7,7 @@ import {
   getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
+import {Image, Money} from '@shopify/hydrogen';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
@@ -77,7 +78,85 @@ async function loadCriticalData({context, params, request}) {
     throw new Response(null, {status: 404});
   }
 
-  return {product};
+  // Determine primary category collection (e.g., kitchen, bathroom, living, outdoor, barware)
+  const CATEGORY_HANDLES = [
+    'kitchen',
+    'bathroom',
+    'living',
+    'outdoor',
+    'barware',
+  ];
+  const PRIMARY_COLLECTION_OVERRIDES = {
+    'waste-basket': 'bathroom',
+  };
+  const productCollections = product?.collections?.nodes ?? [];
+  let primaryCollection =
+    productCollections.find((c) => CATEGORY_HANDLES.includes(c.handle)) || null;
+  if (!primaryCollection) {
+    const overrideHandle = PRIMARY_COLLECTION_OVERRIDES[product.handle];
+    if (overrideHandle) {
+      primaryCollection = {handle: overrideHandle, title: overrideHandle};
+    } else {
+      // Avoid picking homepage/frontpage if present; otherwise fallback to first
+      primaryCollection =
+        productCollections.find(
+          (c) => c.handle !== 'frontpage' && c.handle !== 'home',
+        ) ||
+        productCollections[0] ||
+        null;
+    }
+  }
+
+  let relatedCollection = null;
+  let relatedProducts = [];
+
+  if (primaryCollection?.handle) {
+    try {
+      const relatedResult = await storefront.query(
+        RELATED_COLLECTION_PRODUCTS_QUERY,
+        {
+          variables: {handle: primaryCollection.handle, first: 12},
+        },
+      );
+      if (relatedResult?.collection) {
+        relatedCollection = {
+          handle: relatedResult.collection.handle,
+          title: relatedResult.collection.title,
+        };
+        relatedProducts = relatedResult.collection.products?.nodes ?? [];
+      }
+    } catch {
+      console.warn('Failed to load related collection products');
+    }
+  }
+
+  // Ensure Waste Basket shows in "More in Bathroom" even if not in Shopify collection
+  if (relatedCollection?.handle === 'bathroom') {
+    try {
+      const handlesSet = new Set((relatedProducts ?? []).map((p) => p.handle));
+      if (!handlesSet.has('waste-basket')) {
+        const PRODUCT_BY_HANDLE_FOR_RELATED = `#graphql
+          ${RELATED_PRODUCT_ITEM_FRAGMENT}
+          query ProductForRelated($handle: String!, $country: CountryCode, $language: LanguageCode) @inContext(country: $country, language: $language) {
+            product(handle: $handle) { ...RelatedProductItem }
+          }
+        `;
+        const extra = await storefront.query(PRODUCT_BY_HANDLE_FOR_RELATED, {
+          variables: {handle: 'waste-basket'},
+        });
+        const extraProduct = extra?.product;
+        if (extraProduct?.id) {
+          relatedProducts = [...relatedProducts, extraProduct];
+        }
+      }
+    } catch {
+      console.warn(
+        'Failed to augment related bathroom products with waste-basket',
+      );
+    }
+  }
+
+  return {product, relatedCollection, relatedProducts};
 }
 
 /**
@@ -95,7 +174,7 @@ function loadDeferredData() {
 
 export default function Product() {
   /** @type {LoaderReturnData} */
-  const {product} = useLoaderData();
+  const {product, relatedCollection, relatedProducts} = useLoaderData();
 
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -306,6 +385,140 @@ export default function Product() {
         </div>
       </div>
 
+      {/* Related products in same category */}
+      {relatedCollection && (relatedProducts?.length ?? 0) > 0 && (
+        <div className="related-section" style={{marginTop: '5rem'}}>
+          <style>
+            {`
+              .related-section {
+                background: #f9f9f9;
+                border: 1px solid #eee;
+                border-radius: 12px;
+                padding: 2rem;
+              }
+              .related-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                margin-bottom: 1.25rem;
+              }
+              .related-eyebrow {
+                font-size: 0.75rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: #888;
+                margin: 0 0 0.35rem 0;
+              }
+              .related-title {
+                font-size: 1.5rem;
+                font-weight: 300;
+                margin: 0;
+                letter-spacing: 0.02em;
+              }
+              .related-view-all {
+                font-size: 0.9rem;
+                color: #111;
+                text-decoration: none;
+                border: 1px solid #ddd;
+                padding: 0.45rem 0.8rem;
+                border-radius: 999px;
+                background: #fff;
+                transition: background 0.2s ease, border-color 0.2s ease;
+              }
+              .related-view-all:hover { background: #f3f3f3; border-color: #ccc; }
+              .related-divider { height: 1px; background: #ececec; margin: 1.25rem 0 1.5rem; }
+              .products-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 1.5rem;
+              }
+              @media (max-width: 1024px) {
+                .products-grid { grid-template-columns: repeat(3, 1fr); }
+              }
+              @media (max-width: 768px) {
+                .products-grid { grid-template-columns: repeat(2, 1fr); }
+              }
+              @media (max-width: 480px) {
+                .products-grid { grid-template-columns: 1fr; }
+              }
+              .product-item {
+                text-decoration: none;
+                color: inherit;
+                display: block;
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 10px;
+                overflow: hidden;
+                transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+              }
+              .product-item:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+                border-color: #e3e3e3;
+              }
+              .product-image { position: relative; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; }
+              .product-image img { transition: transform 0.25s ease; }
+              .product-item:hover .product-image img { transform: scale(1.03); }
+              .product-info { padding: 0.6rem 0.75rem 0.8rem; }
+              .product-info h4 { font-size: 1rem; font-weight: 400; margin: 0.25rem 0; letter-spacing: 0.03em; }
+              .product-info small { color: #666; }
+            `}
+          </style>
+
+          <div className="related-header">
+            <div>
+              <div className="related-eyebrow">In this collection</div>
+              <h3 className="related-title">
+                More in {relatedCollection.title}
+              </h3>
+            </div>
+            <Link
+              className="related-view-all"
+              to={`/collections/${relatedCollection.handle}`}
+              prefetch="intent"
+            >
+              View all
+            </Link>
+          </div>
+
+          <div className="related-divider" />
+
+          <div className="products-grid">
+            {relatedProducts
+              .filter((p) => p.handle !== product.handle)
+              .slice(0, 12)
+              .map((p) => (
+                <Link
+                  key={p.id}
+                  className="product-item"
+                  to={`/products/${p.handle}`}
+                  prefetch="intent"
+                >
+                  <div className="product-image">
+                    {p.featuredImage && (
+                      <Image
+                        alt={p.featuredImage.altText || p.title}
+                        aspectRatio="1/1"
+                        data={p.featuredImage}
+                        loading="lazy"
+                        sizes="(min-width: 45em) 400px, 100vw"
+                      />
+                    )}
+                  </div>
+                  <div className="product-info">
+                    <h4>{p.title}</h4>
+                    {p.priceRange?.minVariantPrice && (
+                      <small>
+                        <Money data={p.priceRange.minVariantPrice} />
+                      </small>
+                    )}
+                  </div>
+                </Link>
+              ))}
+          </div>
+        </div>
+      )}
+
       <Analytics.ProductView
         data={{
           products: [
@@ -372,6 +585,9 @@ const PRODUCT_FRAGMENT = `#graphql
     description
     encodedVariantExistence
     encodedVariantAvailability
+    collections(first: 20) {
+      nodes { id handle title }
+    }
     options {
       name
       optionValues {
@@ -415,6 +631,42 @@ const PRODUCT_QUERY = `#graphql
     }
   }
   ${PRODUCT_FRAGMENT}
+`;
+
+// Minimal product fields for related items
+const RELATED_PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment MoneyRelated on MoneyV2 {
+    amount
+    currencyCode
+  }
+  fragment RelatedProductItem on Product {
+    id
+    handle
+    title
+    featuredImage { id altText url width height }
+    priceRange {
+      minVariantPrice { ...MoneyRelated }
+      maxVariantPrice { ...MoneyRelated }
+    }
+  }
+`;
+
+const RELATED_COLLECTION_PRODUCTS_QUERY = `#graphql
+  ${RELATED_PRODUCT_ITEM_FRAGMENT}
+  query RelatedCollection(
+    $handle: String!
+    $country: CountryCode
+    $language: LanguageCode
+    $first: Int
+  ) @inContext(country: $country, language: $language) {
+    collection(handle: $handle) {
+      handle
+      title
+      products(first: $first) {
+        nodes { ...RelatedProductItem }
+      }
+    }
+  }
 `;
 
 /** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */

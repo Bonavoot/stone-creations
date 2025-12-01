@@ -29,6 +29,8 @@ export function AddToCartButton({
             type="submit"
             onClick={onClick}
             disabled={disabled ?? fetcher.state !== 'idle'}
+            aria-busy={fetcher.state !== 'idle'}
+            className="add-to-cart-button"
           >
             {children}
           </button>

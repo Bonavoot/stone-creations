@@ -9,7 +9,7 @@ import {
 } from '@shopify/hydrogen';
 import {Image, Money} from '@shopify/hydrogen';
 import {ProductPrice} from '~/components/ProductPrice';
-import {ProductImage} from '~/components/ProductImage';
+import {ProductGallery} from '~/components/ProductGallery';
 import {ProductForm} from '~/components/ProductForm';
 
 /**
@@ -333,7 +333,10 @@ export default function Product() {
 
       <div className="product-layout">
         <div className="product-image-container">
-          <ProductImage image={selectedVariant?.image} />
+          <ProductGallery
+            images={product?.images?.nodes ?? []}
+            selectedVariantImage={selectedVariant?.image}
+          />
         </div>
 
         <div className="product-details">
@@ -585,6 +588,15 @@ const PRODUCT_FRAGMENT = `#graphql
     description
     encodedVariantExistence
     encodedVariantAvailability
+    images(first: 50) {
+      nodes {
+        id
+        altText
+        url
+        width
+        height
+      }
+    }
     collections(first: 20) {
       nodes { id handle title }
     }

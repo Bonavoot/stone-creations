@@ -17,9 +17,15 @@ export function ProductForm({productOptions, selectedVariant}) {
         // If there is only a single value in the option values, don't display the option
         if (option.optionValues.length === 1) return null;
 
+        const selectedValue =
+          option.optionValues.find((v) => v.selected)?.name || null;
+
         return (
           <div className="product-options" key={option.name}>
-            <h5>{option.name}</h5>
+            <h5>
+              {option.name}
+              {selectedValue ? ` (${selectedValue})` : ''}
+            </h5>
             <div className="product-options-grid">
               {option.optionValues.map((value) => {
                 const {

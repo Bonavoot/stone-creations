@@ -30,10 +30,11 @@ export async function loader(args) {
  * @param {LoaderFunctionArgs}
  */
 async function loadCriticalData({context}) {
-  const [{collections}, {products}] = await Promise.all([
-    context.storefront.query(FEATURED_COLLECTION_QUERY),
-    context.storefront.query(RECOMMENDED_PRODUCTS_QUERY),
-  ]);
+  // Run sequentially to avoid cross-request I/O warnings in MiniOxygen/Workers
+  const {collections} = await context.storefront.query(
+    FEATURED_COLLECTION_QUERY,
+  );
+  const {products} = await context.storefront.query(RECOMMENDED_PRODUCTS_QUERY);
 
   return {
     featuredCollection: collections.nodes[0],

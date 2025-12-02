@@ -5,7 +5,6 @@ import {useAside} from '~/components/Aside';
 import {User, ShoppingCart, Search, Menu} from 'lucide-react';
 import {HeaderDropdown} from './HeaderDropdown';
 import phLogo from '~/assets/ph-logo.png';
-import polishLogo from '~/assets/polish-sample-logo.png';
 
 /**
  * @param {HeaderProps}
@@ -20,14 +19,9 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
       <div className="header-content">
         <NavLink prefetch="intent" to="/" className="logo" end>
           <img
-            src={polishLogo}
-            alt="Polish Sample Logo"
-            style={{height: '70px', width: 'auto', opacity: 1}}
-          />
-          <img
             src={phLogo}
             alt="Polished and Honed"
-            style={{height: '120px', width: 'auto', marginLeft: '-25px'}}
+            style={{height: '140px', width: 'auto'}}
           />
         </NavLink>
         <HeaderMenu

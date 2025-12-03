@@ -32,7 +32,7 @@ export class AppSession {
   static async init(request, secrets) {
     const storage = createCookieSessionStorage({
       cookie: {
-        name: 'session',
+        name: 'hydrogen_session',
         httpOnly: true,
         path: '/',
         sameSite: 'lax',

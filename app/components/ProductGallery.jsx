@@ -127,3 +127,4 @@ export function ProductGallery({images, selectedVariantImage}) {
 }
 
 /** @typedef {import('storefrontapi.generated').ProductFragment} ProductFragment */
+

@@ -38,10 +38,13 @@ export default {
       const response = await handleRequest(request);
 
       if (appLoadContext.session.isPending) {
-        response.headers.set(
-          'Set-Cookie',
-          await appLoadContext.session.commit(),
-        );
+        // Avoid overwriting an existing Set-Cookie from route handlers (e.g. cart.setCartId)
+        if (!response.headers.has('Set-Cookie')) {
+          response.headers.append(
+            'Set-Cookie',
+            await appLoadContext.session.commit(),
+          );
+        }
       }
 
       if (response.status === 404) {

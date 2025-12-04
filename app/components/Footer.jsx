@@ -48,10 +48,12 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
                 <nav className="footer-menu" role="navigation">
                   {(footer?.menu || FALLBACK_FOOTER_MENU).items.map((item) => {
                     if (!item.url) return null;
+                    const primaryDomainUrl = header?.shop?.primaryDomain?.url;
                     const url =
                       item.url.includes('myshopify.com') ||
-                      item.url.includes(publicStoreDomain) ||
-                      item.url.includes(header.shop.primaryDomain.url)
+                      (publicStoreDomain &&
+                        item.url.includes(publicStoreDomain)) ||
+                      (primaryDomainUrl && item.url.includes(primaryDomainUrl))
                         ? new URL(item.url).pathname
                         : item.url;
                     const isExternal = !url.startsWith('/');

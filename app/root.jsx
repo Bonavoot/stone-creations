@@ -16,21 +16,19 @@ import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 
 /**
- * This is important to avoid re-fetching root queries on sub-navigationsss
+ * This is important to avoid re-fetching root queries on sub-navigations
  * @type {ShouldRevalidateFunction}
  */
 export const shouldRevalidate = ({formMethod, currentUrl, nextUrl}) => {
-  // revalidate when a mutation is performed e.g add to cart, login...
-  if (formMethod && formMethod !== 'GET') return true;
-
-  // revalidate when manually revalidating via useRevalidator
-  if (currentUrl.toString() === nextUrl.toString()) return true;
-
-  // Defaulting to no revalidation for root loader data to improve performance.
-  // When using this feature, you risk your UI getting out of sync with your server.
-  // Use with caution. If you are uncomfortable with this optimization, update the
-  // line below to `return defaultShouldRevalidate` instead.
-  // For more details see: https://remix.run/docs/en/main/route/should-revalidate
+  // Revalidate on form mutations (POST/PUT/DELETE) so cart and other data updates
+  if (formMethod && formMethod !== 'GET') {
+    return true;
+  }
+  // Revalidate when navigating to a different URL
+  if (currentUrl.pathname !== nextUrl.pathname) {
+    return true;
+  }
+  // Don't revalidate for same-URL navigations (prevents loops)
   return false;
 };
 
@@ -62,11 +60,11 @@ export function links() {
  * @param {LoaderFunctionArgs} args
  */
 export async function loader(args) {
-  // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
-  const criticalData = await loadCriticalData(args);
+  // Await both critical data and cart data
+  const [criticalData, deferredData] = await Promise.all([
+    loadCriticalData(args),
+    loadDeferredData(args),
+  ]);
 
   const {storefront, env} = args.context;
 
@@ -116,8 +114,15 @@ async function loadCriticalData({context}) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  * @param {LoaderFunctionArgs}
  */
-function loadDeferredData({context}) {
+async function loadDeferredData({context}) {
   const {storefront, customerAccount, cart} = context;
+
+  // Debug: log cart ID that will be used
+  const cartIdFromCookie = cart.getCartId();
+  console.warn(
+    '[ROOT loadDeferredData] cartId from getCartId():',
+    cartIdFromCookie,
+  );
 
   // defer the footer query (below the fold)
   const footer = storefront
@@ -132,12 +137,24 @@ function loadDeferredData({context}) {
       console.error(error);
       return null;
     });
+
+  // Await cart data instead of deferring to ensure it's included in response
+  const cartData = await cart.get();
+  console.warn(
+    '[ROOT] cart.get() returned:',
+    cartData?.id,
+    'lines:',
+    cartData?.lines?.nodes?.length,
+  );
+
   return {
-    cart: cart.get(),
+    cart: cartData,
     isLoggedIn: customerAccount.isLoggedIn(),
     footer,
   };
 }
+// Pass through loader headers (e.g., Set-Cookie with cart id)
+export const headers = ({loaderHeaders}) => loaderHeaders;
 
 /**
  * @param {{children?: React.ReactNode}}

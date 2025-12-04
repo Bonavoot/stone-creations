@@ -37,12 +37,7 @@ export default {
 
       const response = await handleRequest(request);
 
-      if (appLoadContext.session.isPending) {
-        response.headers.append(
-          'Set-Cookie',
-          await appLoadContext.session.commit(),
-        );
-      }
+      // Do not auto-commit session here; route actions handle Set-Cookie.
 
       if (response.status === 404) {
         /**

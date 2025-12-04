@@ -27,6 +27,7 @@ export function HeaderDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [productExistsMap, setProductExistsMap] = useState({});
+  const hasFetchedRef = useRef(false);
 
   const handleMouseEnter = () => {
     setIsOpen(true);
@@ -66,6 +67,10 @@ export function HeaderDropdown({
   };
 
   useEffect(() => {
+    // Only fetch once to prevent infinite loops
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     // Collect unique product handles from subItems
     const handles = new Set();
     items.forEach((item) => {
@@ -82,8 +87,6 @@ export function HeaderDropdown({
 
     if (handles.size === 0) return;
 
-    let isCancelled = false;
-
     (async () => {
       const entries = await Promise.all(
         Array.from(handles).map(async (handle) => {
@@ -98,19 +101,13 @@ export function HeaderDropdown({
           }
         }),
       );
-      if (!isCancelled) {
-        const nextMap = {};
-        entries.forEach(([h, ok]) => {
-          nextMap[h] = ok;
-        });
-        setProductExistsMap(nextMap);
-      }
+      const nextMap = {};
+      entries.forEach(([h, ok]) => {
+        nextMap[h] = ok;
+      });
+      setProductExistsMap(nextMap);
     })();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [items, primaryDomainUrl, publicStoreDomain]);
+  }, [items]);
 
   return (
     <div

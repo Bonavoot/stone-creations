@@ -1,4 +1,8 @@
-import {createHydrogenContext} from '@shopify/hydrogen';
+import {
+  createHydrogenContext,
+  cartGetIdDefault,
+  cartSetIdDefault,
+} from '@shopify/hydrogen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 
@@ -35,6 +39,9 @@ export async function createAppLoadContext(request, env, executionContext) {
       queryVariables: {
         numCartLines: 100,
       },
+      // Explicitly provide cart ID functions
+      getCartId: cartGetIdDefault(request.headers),
+      setCartId: cartSetIdDefault(),
     },
   });
 

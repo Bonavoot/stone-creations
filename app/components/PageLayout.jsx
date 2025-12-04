@@ -1,5 +1,5 @@
-import {Await, Link} from '@remix-run/react';
-import {Suspense, useId} from 'react';
+import {Link} from '@remix-run/react';
+import {useId} from 'react';
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
@@ -50,13 +50,7 @@ export function PageLayout({
 function CartAside({cart}) {
   return (
     <Aside type="cart" heading="CART">
-      <Suspense fallback={<p>Loading cart ...</p>}>
-        <Await resolve={cart}>
-          {(cart) => {
-            return <CartMain cart={cart} layout="aside" />;
-          }}
-        </Await>
-      </Suspense>
+      <CartMain cart={cart} layout="aside" />
     </Aside>
   );
 }
@@ -150,18 +144,20 @@ function SearchAside() {
  * }}
  */
 function MobileMenuAside({header, publicStoreDomain}) {
+  const hasMenu = !!header?.menu;
+  const primaryDomainUrl = header?.shop?.primaryDomain?.url;
+
+  if (!hasMenu || !primaryDomainUrl) return null;
+
   return (
-    header.menu &&
-    header.shop.primaryDomain?.url && (
-      <Aside type="mobile" heading="MENU">
-        <HeaderMenu
-          menu={header.menu}
-          viewport="mobile"
-          primaryDomainUrl={header.shop.primaryDomain.url}
-          publicStoreDomain={publicStoreDomain}
-        />
-      </Aside>
-    )
+    <Aside type="mobile" heading="MENU">
+      <HeaderMenu
+        menu={header.menu}
+        viewport="mobile"
+        primaryDomainUrl={primaryDomainUrl}
+        publicStoreDomain={publicStoreDomain}
+      />
+    </Aside>
   );
 }
 

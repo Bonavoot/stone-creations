@@ -1,6 +1,5 @@
 import {useLoaderData} from '@remix-run/react';
 import {CartForm} from '@shopify/hydrogen';
-import {data} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/CartMain';
 
 /**
@@ -11,15 +10,10 @@ export const meta = () => {
 };
 
 /**
- * @type {HeadersFunction}
- */
-export const headers = ({actionHeaders}) => actionHeaders;
-
-/**
  * @param {ActionFunctionArgs}
  */
 export async function action({request, context}) {
-  const {cart} = context;
+  const {cart, session} = context;
 
   const formData = await request.formData();
 
@@ -77,35 +71,53 @@ export async function action({request, context}) {
   }
 
   const cartId = result?.cart?.id;
-  const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
-  // Ensure session cookie changes are always sent with this action response.
-  // This avoids cases where upstream headers might be dropped or overwritten.
-  if (context?.session?.isPending) {
-    try {
-      headers.append('Set-Cookie', await context.session.commit());
-    } catch {
-      // best-effort; ignore commit errors to not block cart response
-    }
-  }
   const {cart: cartResult, errors, warnings} = result;
+
+  // Use Hydrogen's cart.setCartId() to get properly formatted headers
+  const cartHeaders = cartId ? cart.setCartId(cartId) : new Headers();
+
+  // Also commit our session to be safe
+  const sessionCookie = await session.commit();
+
+  // Debug logging
+  console.log('[CART] cartId:', cartId);
+  console.log('[CART] cartHeaders Set-Cookie:', cartHeaders.get('Set-Cookie'));
+  console.log('[CART] sessionCookie:', sessionCookie);
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
     status = 303;
+  }
+
+  const responseBody = JSON.stringify({
+    cart: cartResult,
+    errors,
+    warnings,
+    analytics: {
+      cartId,
+    },
+  });
+
+  // Start with cart headers (which should include Set-Cookie from Hydrogen)
+  const headers = new Headers();
+  headers.set('Content-Type', 'application/json');
+
+  // Add cart's Set-Cookie if present
+  const cartCookie = cartHeaders.get('Set-Cookie');
+  if (cartCookie) {
+    headers.append('Set-Cookie', cartCookie);
+  }
+
+  // Also add our session cookie
+  if (sessionCookie) {
+    headers.append('Set-Cookie', sessionCookie);
+  }
+
+  if (typeof redirectTo === 'string') {
     headers.set('Location', redirectTo);
   }
 
-  return data(
-    {
-      cart: cartResult,
-      errors,
-      warnings,
-      analytics: {
-        cartId,
-      },
-    },
-    {status, headers},
-  );
+  return new Response(responseBody, {status, headers});
 }
 
 /**
@@ -132,6 +144,5 @@ export default function Cart() {
 /** @typedef {import('@shopify/hydrogen').CartQueryDataReturn} CartQueryDataReturn */
 /** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
 /** @typedef {import('@shopify/remix-oxygen').ActionFunctionArgs} ActionFunctionArgs */
-/** @typedef {import('@shopify/remix-oxygen').HeadersFunction} HeadersFunction */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof action>} ActionReturnData */

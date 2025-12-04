@@ -36,6 +36,8 @@ export class AppSession {
         httpOnly: true,
         path: '/',
         sameSite: 'lax',
+        // Ensure cookie is accepted over http://localhost during development
+        secure: false,
         secrets,
       },
     });
@@ -48,25 +50,32 @@ export class AppSession {
   }
 
   get has() {
-    return this.#session.has;
+    return this.#session.has.bind(this.#session);
   }
 
   get get() {
-    return this.#session.get;
+    return this.#session.get.bind(this.#session);
   }
 
   get flash() {
-    return this.#session.flash;
+    return (...args) => {
+      this.isPending = true;
+      return this.#session.flash(...args);
+    };
   }
 
   get unset() {
-    this.isPending = true;
-    return this.#session.unset;
+    return (...args) => {
+      this.isPending = true;
+      return this.#session.unset(...args);
+    };
   }
 
   get set() {
-    this.isPending = true;
-    return this.#session.set;
+    return (...args) => {
+      this.isPending = true;
+      return this.#session.set(...args);
+    };
   }
 
   destroy() {

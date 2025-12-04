@@ -1,5 +1,5 @@
 import {Suspense} from 'react';
-import {Await, NavLink, useAsyncValue} from '@remix-run/react';
+import {Await, NavLink} from '@remix-run/react';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
 import {User, ShoppingCart, Search, Menu} from 'lucide-react';
@@ -341,17 +341,10 @@ function CartBadge({count}) {
  * @param {Pick<HeaderProps, 'cart'>}
  */
 function CartToggle({cart}) {
-  return (
-    <Suspense fallback={<CartBadge count={null} />}>
-      <Await resolve={cart}>
-        <CartBanner />
-      </Await>
-    </Suspense>
-  );
+  return <CartBanner cart={cart} />;
 }
 
-function CartBanner() {
-  const originalCart = useAsyncValue();
+function CartBanner({cart: originalCart}) {
   const cart = useOptimisticCart(originalCart);
   return <CartBadge count={cart?.totalQuantity ?? 0} />;
 }

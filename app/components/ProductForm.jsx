@@ -112,6 +112,7 @@ export function ProductForm({productOptions, selectedVariant}) {
                 {
                   merchandiseId: selectedVariant.id,
                   quantity: 1,
+                  // Provide selectedVariant so Hydrogen can build an optimistic line
                   selectedVariant,
                 },
               ]

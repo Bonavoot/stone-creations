@@ -78,6 +78,15 @@ export async function action({request, context}) {
 
   const cartId = result?.cart?.id;
   const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
+  // Ensure session cookie changes are always sent with this action response.
+  // This avoids cases where upstream headers might be dropped or overwritten.
+  if (context?.session?.isPending) {
+    try {
+      headers.append('Set-Cookie', await context.session.commit());
+    } catch {
+      // best-effort; ignore commit errors to not block cart response
+    }
+  }
   const {cart: cartResult, errors, warnings} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;

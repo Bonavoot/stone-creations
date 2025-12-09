@@ -1,6 +1,7 @@
-import {useLoaderData} from '@remix-run/react';
+import {json} from '@shopify/remix-oxygen';
 import {CartForm} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
+import {useCartState} from '~/components/PageLayout';
 
 /**
  * @type {MetaFunction}
@@ -13,17 +14,15 @@ export const meta = () => {
  * @param {ActionFunctionArgs}
  */
 export async function action({request, context}) {
-  const {cart, session} = context;
+  const {cart} = context;
 
   const formData = await request.formData();
-
   const {action, inputs} = CartForm.getFormInput(formData);
 
   if (!action) {
     throw new Error('No action provided');
   }
 
-  let status = 200;
   let result;
 
   switch (action) {
@@ -38,25 +37,15 @@ export async function action({request, context}) {
       break;
     case CartForm.ACTIONS.DiscountCodesUpdate: {
       const formDiscountCode = inputs.discountCode;
-
-      // User inputted discount code
       const discountCodes = formDiscountCode ? [formDiscountCode] : [];
-
-      // Combine discount codes already applied on cart
       discountCodes.push(...inputs.discountCodes);
-
       result = await cart.updateDiscountCodes(discountCodes);
       break;
     }
     case CartForm.ACTIONS.GiftCardCodesUpdate: {
       const formGiftCardCode = inputs.giftCardCode;
-
-      // User inputted gift card code
       const giftCardCodes = formGiftCardCode ? [formGiftCardCode] : [];
-
-      // Combine gift card codes already applied on cart
       giftCardCodes.push(...inputs.giftCardCodes);
-
       result = await cart.updateGiftCardCodes(giftCardCodes);
       break;
     }
@@ -71,53 +60,21 @@ export async function action({request, context}) {
   }
 
   const cartId = result?.cart?.id;
-  const {cart: cartResult, errors, warnings} = result;
+  const headers = cartId ? cart.setCartId(cartId) : new Headers();
 
-  // Use Hydrogen's cart.setCartId() to get properly formatted headers
-  const cartHeaders = cartId ? cart.setCartId(cartId) : new Headers();
+  const {cart: cartResult, errors, warnings} = result || {};
 
-  // Also commit our session to be safe
-  const sessionCookie = await session.commit();
-
-  // Debug logging
-  console.log('[CART] cartId:', cartId);
-  console.log('[CART] cartHeaders Set-Cookie:', cartHeaders.get('Set-Cookie'));
-  console.log('[CART] sessionCookie:', sessionCookie);
-
-  const redirectTo = formData.get('redirectTo') ?? null;
-  if (typeof redirectTo === 'string') {
-    status = 303;
-  }
-
-  const responseBody = JSON.stringify({
-    cart: cartResult,
-    errors,
-    warnings,
-    analytics: {
-      cartId,
+  return json(
+    {
+      cart: cartResult,
+      errors,
+      warnings,
+      analytics: {
+        cartId,
+      },
     },
-  });
-
-  // Start with cart headers (which should include Set-Cookie from Hydrogen)
-  const headers = new Headers();
-  headers.set('Content-Type', 'application/json');
-
-  // Add cart's Set-Cookie if present
-  const cartCookie = cartHeaders.get('Set-Cookie');
-  if (cartCookie) {
-    headers.append('Set-Cookie', cartCookie);
-  }
-
-  // Also add our session cookie
-  if (sessionCookie) {
-    headers.append('Set-Cookie', sessionCookie);
-  }
-
-  if (typeof redirectTo === 'string') {
-    headers.set('Location', redirectTo);
-  }
-
-  return new Response(responseBody, {status, headers});
+    {headers},
+  );
 }
 
 /**
@@ -129,8 +86,8 @@ export async function loader({context}) {
 }
 
 export default function Cart() {
-  /** @type {LoaderReturnData} */
-  const cart = useLoaderData();
+  // Get cart from context for consistent state across cart aside and page
+  const cart = useCartState();
 
   return (
     <div className="cart">

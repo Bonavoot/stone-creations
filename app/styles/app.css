@@ -75,7 +75,10 @@ aside header h2 {
 }
 
 aside main {
-  margin: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 90%;
+  overflow: hidden;
 }
 
 aside p {
@@ -488,15 +491,30 @@ button.reset:hover:not(:has(> *)) {
 * --------------------------------------------------
 */
 .cart-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
   height: 100%;
-  max-height: calc(100vh - var(--cart-aside-summary-height));
-  overflow-y: auto;
-  width: auto;
-  padding: 1.5rem;
 }
 
-.cart-main.with-discount {
-  max-height: calc(100vh - var(--cart-aside-summary-height-with-discount));
+.cart-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.cart-details > div[aria-labelledby="cart-lines"] {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+}
+
+.cart-details > div[aria-labelledby="cart-lines"] ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .cart-line {
@@ -608,11 +626,8 @@ button.reset:hover:not(:has(> *)) {
 .cart-summary-aside {
   background: white;
   border-top: 1px solid #f0f0f0;
-  bottom: 0;
   padding: 1.5rem;
-  position: absolute;
-  left: 0;
-  width: calc(var(--aside-width) - 3rem);
+  flex-shrink: 0;
   box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
@@ -658,7 +673,7 @@ button.reset:hover:not(:has(> *)) {
 
 .cart-empty {
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 3rem 1.5rem;
 }
 
 .cart-empty p {

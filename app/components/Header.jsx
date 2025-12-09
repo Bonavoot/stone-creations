@@ -1,7 +1,8 @@
 import {Suspense} from 'react';
 import {Await, NavLink} from '@remix-run/react';
-import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
+import {useAnalytics} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
+import {useCartState} from '~/components/PageLayout';
 import {User, ShoppingCart, Search, Menu} from 'lucide-react';
 import {HeaderDropdown} from './HeaderDropdown';
 import phLogo from '~/assets/ph-logo.png';
@@ -9,7 +10,7 @@ import phLogo from '~/assets/ph-logo.png';
 /**
  * @param {HeaderProps}
  */
-export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
+export function Header({header, isLoggedIn, publicStoreDomain}) {
   const {menu} = header;
   return (
     <header className="header">
@@ -30,7 +31,7 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
           primaryDomainUrl={header.shop.primaryDomain.url}
           publicStoreDomain={publicStoreDomain}
         />
-        <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+        <HeaderCtas isLoggedIn={isLoggedIn} />
       </div>
     </header>
   );
@@ -262,9 +263,9 @@ export function HeaderMenu({
 }
 
 /**
- * @param {Pick<HeaderProps, 'isLoggedIn' | 'cart'>}
+ * @param {Pick<HeaderProps, 'isLoggedIn'>}
  */
-function HeaderCtas({isLoggedIn, cart}) {
+function HeaderCtas({isLoggedIn}) {
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
@@ -283,7 +284,7 @@ function HeaderCtas({isLoggedIn, cart}) {
         </Suspense>
       </NavLink>
 
-      <CartToggle cart={cart} />
+      <CartToggle />
     </nav>
   );
 }
@@ -337,15 +338,8 @@ function CartBadge({count}) {
   );
 }
 
-/**
- * @param {Pick<HeaderProps, 'cart'>}
- */
-function CartToggle({cart}) {
-  return <CartBanner cart={cart} />;
-}
-
-function CartBanner({cart: originalCart}) {
-  const cart = useOptimisticCart(originalCart);
+function CartToggle() {
+  const cart = useCartState();
   return <CartBadge count={cart?.totalQuantity ?? 0} />;
 }
 
@@ -426,7 +420,6 @@ function activeLinkStyle({isActive, isPending}) {
 /**
  * @typedef {Object} HeaderProps
  * @property {HeaderQuery} header
- * @property {Promise<CartApiQueryFragment|null>} cart
  * @property {Promise<boolean>} isLoggedIn
  * @property {string} publicStoreDomain
  */

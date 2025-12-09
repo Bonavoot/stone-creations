@@ -60,7 +60,7 @@ export function links() {
  * @param {LoaderFunctionArgs} args
  */
 export async function loader(args) {
-  // Await both critical data and cart data
+  // Await both critical data and deferred data
   const [criticalData, deferredData] = await Promise.all([
     loadCriticalData(args),
     loadDeferredData(args),
@@ -117,14 +117,7 @@ async function loadCriticalData({context}) {
 async function loadDeferredData({context}) {
   const {storefront, customerAccount, cart} = context;
 
-  // Debug: log cart ID that will be used
-  const cartIdFromCookie = cart.getCartId();
-  console.warn(
-    '[ROOT loadDeferredData] cartId from getCartId():',
-    cartIdFromCookie,
-  );
-
-  // defer the footer query (below the fold)
+  // Fetch footer query (below the fold)
   const footer = storefront
     .query(FOOTER_QUERY, {
       cache: storefront.CacheLong(),
@@ -138,14 +131,8 @@ async function loadDeferredData({context}) {
       return null;
     });
 
-  // Await cart data instead of deferring to ensure it's included in response
+  // Await cart data to ensure proper synchronization with cart mutations
   const cartData = await cart.get();
-  console.warn(
-    '[ROOT] cart.get() returned:',
-    cartData?.id,
-    'lines:',
-    cartData?.lines?.nodes?.length,
-  );
 
   return {
     cart: cartData,

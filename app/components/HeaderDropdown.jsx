@@ -125,7 +125,6 @@ export function HeaderDropdown({
         }
         style={({isActive}) => ({
           fontWeight: isActive ? '600' : '400',
-          color: '#333',
         })}
       >
         {title}

@@ -71,6 +71,14 @@ body {
 
 body > main {
   margin: 0 1rem 1rem 1rem;
+  /* Add padding for fixed header on non-homepage pages (banner ~34px + header ~80px = ~114px) */
+  padding-top: 120px;
+}
+
+/* Homepage doesn't need top padding - hero goes behind transparent header */
+body > main:has(.home-editorial) {
+  padding-top: 0;
+  margin: 0; /* Remove margins for full-bleed hero */
 }
 
 section {

@@ -1,28 +1,57 @@
-import {Suspense} from 'react';
-import {Await, NavLink} from '@remix-run/react';
+import {Suspense, useState, useEffect, useCallback} from 'react';
+import {Await, NavLink, useLocation} from '@remix-run/react';
 import {useAnalytics} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
 import {useCartState} from '~/components/PageLayout';
 import {User, ShoppingCart, Search, Menu} from 'lucide-react';
 import {HeaderDropdown} from './HeaderDropdown';
 import phLogo from '~/assets/ph-logo.png';
+import phLogoWhite from '~/assets/ph-logo-white.png';
 
 /**
  * @param {HeaderProps}
  */
 export function Header({header, isLoggedIn, publicStoreDomain}) {
   const {menu} = header;
+  const location = useLocation();
+  const isHomepage = location.pathname === '/';
+  
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Consider scrolled after 50px
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll, {passive: true});
+    // Check initial scroll position
+    handleScroll();
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Determine if header background should be solid (scrolled OR hovered)
+  const isSolidBackground = isScrolled || isHovered || !isHomepage;
+  // Determine if header should be in compact mode (ONLY when scrolled, NOT on hover)
+  const isCompact = isScrolled || !isHomepage;
+
   return (
-    <header className="header">
+    <header 
+      className={`header ${isHomepage ? 'header-transparent' : ''} ${isSolidBackground ? 'header-solid' : ''}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="banner">
         <p className="banner-txt">ALL PRODUCTS MADE & SHIPPED IN THE U.S.A</p>
       </div>
-      <div className="header-content">
-        <NavLink prefetch="intent" to="/" className="logo" end>
+      <div className={`header-content ${isCompact ? 'header-content-compact' : ''}`}>
+        <NavLink prefetch="intent" to="/" className={`logo ${isCompact ? 'logo-compact' : ''}`} end>
           <img
-            src={phLogo}
+            src={isSolidBackground ? phLogo : phLogoWhite}
             alt="Polished and Honed"
-            style={{height: '140px', width: 'auto'}}
+            className="logo-img"
           />
         </NavLink>
         <HeaderMenu
@@ -30,8 +59,9 @@ export function Header({header, isLoggedIn, publicStoreDomain}) {
           viewport="desktop"
           primaryDomainUrl={header.shop.primaryDomain.url}
           publicStoreDomain={publicStoreDomain}
+          isSolid={isSolidBackground}
         />
-        <HeaderCtas isLoggedIn={isLoggedIn} />
+        <HeaderCtas isLoggedIn={isLoggedIn} isSolid={isSolidBackground} />
       </div>
     </header>
   );
@@ -50,6 +80,7 @@ export function HeaderMenu({
   primaryDomainUrl,
   viewport,
   publicStoreDomain,
+  isSolid = true,
 }) {
   const className = `header-menu-${viewport}`;
   const {close} = useAside();
@@ -263,25 +294,15 @@ export function HeaderMenu({
 }
 
 /**
- * @param {Pick<HeaderProps, 'isLoggedIn'>}
+ * @param {Pick<HeaderProps, 'isLoggedIn'> & {isSolid?: boolean}}
  */
-function HeaderCtas({isLoggedIn}) {
+function HeaderCtas({isLoggedIn, isSolid = true}) {
   return (
-    <nav className="header-ctas" role="navigation">
+    <nav className={`header-ctas ${!isSolid ? 'header-ctas-light' : ''}`} role="navigation">
       <HeaderMenuMobileToggle />
       <SearchToggle />
-      <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        <Suspense fallback={<User size={20} />}>
-          <Await resolve={isLoggedIn} errorElement={<User size={20} />}>
-            {(isLoggedIn) => (
-              <>
-                <span className="sr-only">
-                  {isLoggedIn ? <User size={20} /> : <User size={20} />}
-                </span>
-              </>
-            )}
-          </Await>
-        </Suspense>
+      <NavLink prefetch="intent" to="/account" className="account-link" style={activeLinkStyle}>
+        <User size={20} />
       </NavLink>
 
       <CartToggle />
@@ -412,7 +433,7 @@ const FALLBACK_HEADER_MENU = {
 function activeLinkStyle({isActive, isPending}) {
   return {
     fontWeight: isActive ? '600' : '400',
-    color: isPending ? '#666' : '#000',
+    opacity: isPending ? 0.7 : 1,
   };
 }
 

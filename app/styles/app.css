@@ -175,10 +175,28 @@ button.reset:hover:not(:has(> *)) {
   height: auto;
   width: 100vw;
   padding: 0;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
   margin: 0;
   z-index: 100;
+  border-bottom: solid 1px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  /* Allow logo to overflow if needed - logo image has built-in whitespace */
+  overflow: visible;
+}
+
+/* Transparent header state (homepage, at top) */
+.header.header-transparent {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.1) 60%, transparent 100%);
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+
+/* Solid header state (scrolled, hovered, or non-homepage) */
+.header.header-transparent.header-solid {
+  background: #fff;
   border-bottom: solid 1px rgba(0, 0, 0, 0.08);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
@@ -194,6 +212,7 @@ button.reset:hover:not(:has(> *)) {
   align-items: center;
   margin: 0;
 }
+
 .banner-txt {
   font-size: 0.8rem;
   letter-spacing: 0.08em;
@@ -205,46 +224,64 @@ button.reset:hover:not(:has(> *)) {
   display: flex;
   width: 100%;
   max-width: 1400px;
-  padding: 0 2.5rem;
+  padding: 0.5rem 2.5rem;
   align-items: center;
   justify-content: space-between;
-  height: var(--header-height);
+  height: 80px;
+  /* Allow logo to overflow the header height */
+  overflow: visible;
   margin: 0 auto;
   position: relative;
+  transition: height 0.35s ease, padding 0.35s ease;
 
   @media (max-width: 64em) {
-    height: fit-content;
+    height: 60px;
     padding: 0.5rem 1.25rem;
     gap: 1rem;
   }
 }
 
+/* Compact header content when scrolled */
+.header-content.header-content-compact {
+  height: 60px;
+  padding: 0.25rem 2.5rem;
+
+  @media (max-width: 64em) {
+    padding: 0.5rem 1.25rem;
+    height: 50px;
+  }
+}
+
 .logo {
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.35s ease;
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  /* Allow logo to overflow header height - the logo image has built-in whitespace */
+  overflow: visible;
 
   &:hover {
     opacity: 0.85;
-    transform: translateY(-1px);
   }
+}
 
-  img {
-    height: 140px;
-    width: auto;
-    max-height: 140px;
-    object-fit: contain;
-  }
+.logo-img {
+  /* Keep the same size at all times - don't shrink or hide */
+  height: 150px;
+  width: auto;
+  max-height: 150px;
+  object-fit: contain;
+  transition: opacity 0.35s ease;
+}
 
-  @media (max-width: 64em) {
-    img {
-      height: 70px;
-      max-height: 70px;
-      transform: scale(1.3);
-      transform-origin: left center;
-    }
+/* Logo stays the same size when scrolled - no longer hidden */
+/* The logo image has whitespace built in, so it can overflow the header visually */
+
+@media (max-width: 64em) {
+  .logo-img {
+    height: 100px;
+    max-height: 100px;
   }
 }
 
@@ -265,19 +302,36 @@ button.reset:hover:not(:has(> *)) {
 
 .header-menu-item,
 .header-dropdown-trigger {
-  font-size: 0.8rem;
-  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   position: relative;
   color: #333;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
   padding: 0.5rem 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* Light text for transparent header */
+.header.header-transparent:not(.header-solid) .header-menu-item,
+.header.header-transparent:not(.header-solid) .header-dropdown-trigger {
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+.header.header-transparent:not(.header-solid) .header-menu-item:hover,
+.header.header-transparent:not(.header-solid) .header-dropdown-trigger:hover {
+  color: #fff;
+  opacity: 0.85;
 }
 
 .header-menu-item:after,
@@ -299,6 +353,11 @@ button.reset:hover:not(:has(> *)) {
   text-decoration: none;
 }
 
+.header.header-transparent:not(.header-solid) .header-menu-item:hover,
+.header.header-transparent:not(.header-solid) .header-dropdown-trigger:hover {
+  transform: translateY(-1px);
+}
+
 .header-menu-item:hover:after,
 .header-dropdown-trigger:hover:after {
   width: 100%;
@@ -311,6 +370,7 @@ button.reset:hover:not(:has(> *)) {
   flex-shrink: 0;
   position: sticky;
   right: 2.5rem;
+  transition: color 0.25s ease;
 
   @media (max-width: 64em) {
     gap: 1.25rem;
@@ -319,13 +379,26 @@ button.reset:hover:not(:has(> *)) {
   }
 }
 
+/* Light icons for transparent header */
+.header.header-transparent:not(.header-solid) .header-ctas {
+  color: #fff;
+}
+
+.header.header-transparent:not(.header-solid) .header-ctas > .search-icon,
+.header.header-transparent:not(.header-solid) .header-ctas > a,
+.header.header-transparent:not(.header-solid) .header-ctas .account-link {
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+}
+
 .header-ctas > .search-icon,
-.header-ctas > a {
+.header-ctas > a,
+.header-ctas .account-link {
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   flex-shrink: 0;
   color: #333;
 
@@ -333,6 +406,22 @@ button.reset:hover:not(:has(> *)) {
     color: #000;
     transform: translateY(-1px);
   }
+}
+
+.header.header-transparent:not(.header-solid) .header-ctas > .search-icon:hover,
+.header.header-transparent:not(.header-solid) .header-ctas > a:hover {
+  color: #fff;
+  opacity: 0.85;
+}
+
+.header.header-transparent:not(.header-solid) .header-menu-mobile-toggle {
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+}
+
+.header.header-transparent:not(.header-solid) .header-menu-mobile-toggle:hover {
+  color: #fff;
+  opacity: 0.85;
 }
 
 .cart-icon {

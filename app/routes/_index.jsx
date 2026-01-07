@@ -56,6 +56,8 @@ export default function Homepage() {
             --color-accent: #8b7355;
             background: var(--color-light);
             overflow-x: hidden;
+            margin: 0;
+            padding: 0;
           }
           
 
@@ -63,19 +65,24 @@ export default function Homepage() {
           .hero-full {
             display: flex;
             flex-direction: column;
-            margin-top: -1.5rem;
+            /* Fill exactly the viewport height - content strip will be at bottom */
+            height: 100vh;
+            height: 100dvh; /* Use dynamic viewport height for mobile browsers */
+            margin: 0;
+            padding: 0;
           }
           
           .hero-image-full {
             width: 100%;
-            height: calc(100vh - 250px);
-            min-height: 320px;
-            max-height: 600px;
+            /* Flex-grow allows image to fill remaining space after content strip */
+            flex: 1 1 auto;
+            min-height: 0; /* Allow shrinking below content size */
             object-fit: cover;
             object-position: center 35%;
           }
           
           .hero-content-strip {
+            flex-shrink: 0;
             padding: 1.25rem 6%;
             background: white;
             display: flex;
@@ -786,10 +793,16 @@ export default function Homepage() {
 
           /* ===== RESPONSIVE ===== */
           @media (max-width: 900px) {
+            .hero-full {
+              /* On smaller screens, still fill viewport for consistent bottom positioning */
+              height: 100vh;
+              height: 100dvh;
+            }
+            
             .hero-image-full {
-              height: 45vh;
-              min-height: 250px;
-              max-height: 400px;
+              /* Image fills remaining space after content strip */
+              flex: 1 1 auto;
+              min-height: 0;
             }
             
             .hero-content-strip {

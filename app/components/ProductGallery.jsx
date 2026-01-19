@@ -1,5 +1,6 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useState, useCallback} from 'react';
 import {Image} from '@shopify/hydrogen';
+import {useNavigate} from '@remix-run/react';
 
 /**
  * @param {{
@@ -17,13 +18,32 @@ import {Image} from '@shopify/hydrogen';
  *    width?: number | null;
  *    height?: number | null;
  *  } | null;
+ *  variants?: Array<{
+ *    id: string;
+ *    image?: { id?: string } | null;
+ *    selectedOptions: Array<{ name: string; value: string }>;
+ *  }>;
  * }}
  */
-export function ProductGallery({images, selectedVariantImage}) {
+export function ProductGallery({images, selectedVariantImage, variants}) {
+  const navigate = useNavigate();
   const imageList = useMemo(() => images ?? [], [images]);
   const [activeId, setActiveId] = useState(() => {
     return selectedVariantImage?.id || imageList[0]?.id || null;
   });
+
+  // Build a map from image ID to variant for quick lookup
+  const imageToVariantMap = useMemo(() => {
+    const map = new Map();
+    if (variants) {
+      for (const variant of variants) {
+        if (variant.image?.id) {
+          map.set(variant.image.id, variant);
+        }
+      }
+    }
+    return map;
+  }, [variants]);
 
   useEffect(() => {
     if (selectedVariantImage?.id) {
@@ -33,6 +53,28 @@ export function ProductGallery({images, selectedVariantImage}) {
 
   const activeImage =
     imageList.find((img) => img.id === activeId) || imageList[0] || null;
+
+  // Handle thumbnail click - select image and optionally change variant
+  const handleThumbnailClick = useCallback(
+    (imageId) => {
+      setActiveId(imageId);
+
+      // Check if this image belongs to a variant
+      const variant = imageToVariantMap.get(imageId);
+      if (variant) {
+        // Build the URL query from the variant's selected options
+        const params = new URLSearchParams();
+        for (const option of variant.selectedOptions) {
+          params.set(option.name, option.value);
+        }
+        navigate(`?${params.toString()}`, {
+          replace: true,
+          preventScrollReset: true,
+        });
+      }
+    },
+    [imageToVariantMap, navigate],
+  );
 
   if (!activeImage && imageList.length === 0) {
     return <div className="product-image" />;
@@ -108,7 +150,7 @@ export function ProductGallery({images, selectedVariantImage}) {
               className={`product-gallery-thumb${
                 img.id === activeId ? ' active' : ''
               }`}
-              onClick={() => setActiveId(img.id)}
+              onClick={() => handleThumbnailClick(img.id)}
               aria-label={`View image`}
             >
               <Image

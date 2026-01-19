@@ -1,4 +1,5 @@
 import {useLoaderData, Link} from '@remix-run/react';
+import {useMemo} from 'react';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -192,6 +193,31 @@ export default function Product() {
     selectedOrFirstAvailableVariant: selectedVariant,
   });
 
+  // Extract all variants from the product options for image-to-variant mapping
+  const allVariants = useMemo(() => {
+    const variants = [];
+    const seenIds = new Set();
+
+    // Add the selected variant
+    if (selectedVariant?.id && !seenIds.has(selectedVariant.id)) {
+      variants.push(selectedVariant);
+      seenIds.add(selectedVariant.id);
+    }
+
+    // Add all variants from options (firstSelectableVariant for each option value)
+    for (const option of product.options || []) {
+      for (const optionValue of option.optionValues || []) {
+        const variant = optionValue.firstSelectableVariant;
+        if (variant?.id && !seenIds.has(variant.id)) {
+          variants.push(variant);
+          seenIds.add(variant.id);
+        }
+      }
+    }
+
+    return variants;
+  }, [product.options, selectedVariant]);
+
   const {title, descriptionHtml} = product;
 
   return (
@@ -336,6 +362,7 @@ export default function Product() {
           <ProductGallery
             images={product?.images?.nodes ?? []}
             selectedVariantImage={selectedVariant?.image}
+            variants={allVariants}
           />
         </div>
 

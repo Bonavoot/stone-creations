@@ -398,6 +398,44 @@ export type CollectionsWithProductsQuery = {
   };
 };
 
+export type HeroProductFragment = Pick<
+  StorefrontAPI.Product,
+  'id' | 'title' | 'handle'
+> & {
+  images: {
+    nodes: Array<
+      Pick<StorefrontAPI.Image, 'id' | 'url' | 'altText' | 'width' | 'height'>
+    >;
+  };
+};
+
+export type HeroProductsQueryVariables = StorefrontAPI.Exact<{
+  handle: StorefrontAPI.Scalars['String']['input'];
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+}>;
+
+export type HeroProductsQuery = {
+  collection?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.Collection, 'id' | 'title'> & {
+      products: {
+        nodes: Array<
+          Pick<StorefrontAPI.Product, 'id' | 'title' | 'handle'> & {
+            images: {
+              nodes: Array<
+                Pick<
+                  StorefrontAPI.Image,
+                  'id' | 'url' | 'altText' | 'width' | 'height'
+                >
+              >;
+            };
+          }
+        >;
+      };
+    }
+  >;
+};
+
 export type ProductExistsQueryVariables = StorefrontAPI.Exact<{
   handle: StorefrontAPI.Scalars['String']['input'];
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
@@ -1384,6 +1422,10 @@ interface GeneratedQueryTypes {
   '#graphql\n  fragment CollectionProduct on Product {\n    id\n    title\n    handle\n    priceRange {\n      minVariantPrice {\n        amount\n        currencyCode\n      }\n    }\n    images(first: 1) {\n      nodes {\n        id\n        url\n        altText\n        width\n        height\n      }\n    }\n  }\n  fragment CollectionWithProducts on Collection {\n    id\n    title\n    handle\n    products(first: 4) {\n      nodes {\n        ...CollectionProduct\n      }\n    }\n  }\n  query CollectionsWithProducts($country: CountryCode, $language: LanguageCode)\n    @inContext(country: $country, language: $language) {\n    collections(first: 6) {\n      nodes {\n        ...CollectionWithProducts\n      }\n    }\n  }\n': {
     return: CollectionsWithProductsQuery;
     variables: CollectionsWithProductsQueryVariables;
+  };
+  '#graphql\n  fragment HeroProduct on Product {\n    id\n    title\n    handle\n    images(first: 10) {\n      nodes {\n        id\n        url\n        altText\n        width\n        height\n      }\n    }\n  }\n  query HeroProducts(\n    $handle: String!\n    $country: CountryCode\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    collection(handle: $handle) {\n      id\n      title\n      products(first: 8) {\n        nodes {\n          ...HeroProduct\n        }\n      }\n    }\n  }\n': {
+    return: HeroProductsQuery;
+    variables: HeroProductsQueryVariables;
   };
   '#graphql\n    query ProductExists($handle: String!, $country: CountryCode, $language: LanguageCode)\n      @inContext(country: $country, language: $language) {\n      product(handle: $handle) { id }\n    }\n  ': {
     return: ProductExistsQuery;

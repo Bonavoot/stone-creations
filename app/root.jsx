@@ -87,6 +87,7 @@ export async function loader(args) {
   };
 }
 
+
 /**
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
@@ -140,8 +141,27 @@ async function loadDeferredData({context}) {
     footer,
   };
 }
-// Pass through loader headers (e.g., Set-Cookie with cart id)
-export const headers = ({loaderHeaders}) => loaderHeaders;
+/**
+ * Merge loader and action headers.
+ * Critically, set Cache-Control to private to prevent CDN caching of
+ * personalized cart data on production (Oxygen/Cloudflare).
+ */
+export const headers = ({loaderHeaders, actionHeaders}) => {
+  const headers = new Headers(loaderHeaders);
+
+  // Merge action headers (e.g., Set-Cookie from cart mutations)
+  if (actionHeaders) {
+    for (const [key, value] of actionHeaders.entries()) {
+      headers.append(key, value);
+    }
+  }
+
+  // Prevent CDN caching of the document response since it contains cart data
+  // This fixes the bug where removed cart items reappear after page refresh
+  headers.set('Cache-Control', 'no-store, private');
+
+  return headers;
+};
 
 /**
  * @param {{children?: React.ReactNode}}

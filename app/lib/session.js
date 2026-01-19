@@ -30,14 +30,17 @@ export class AppSession {
    * @param {string[]} secrets
    */
   static async init(request, secrets) {
+    // Determine if we're in production by checking the request URL
+    const isProduction = new URL(request.url).protocol === 'https:';
+
     const storage = createCookieSessionStorage({
       cookie: {
         name: 'session',
         httpOnly: true,
         path: '/',
         sameSite: 'lax',
-        // Ensure cookie is accepted over http://localhost during development
-        secure: false,
+        // Use secure cookies in production (HTTPS), allow insecure for localhost dev
+        secure: isProduction,
         secrets,
       },
     });

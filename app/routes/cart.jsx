@@ -64,6 +64,9 @@ export async function action({request, context}) {
 
   const {cart: cartResult, errors, warnings} = result || {};
 
+  // Ensure cart responses are not cached by CDN
+  headers.set('Cache-Control', 'no-store, private');
+
   return json(
     {
       cart: cartResult,
@@ -78,11 +81,27 @@ export async function action({request, context}) {
 }
 
 /**
+ * Pass through headers from cart actions to prevent CDN caching
+ */
+export const headers = ({actionHeaders}) => {
+  const responseHeaders = new Headers(actionHeaders);
+  responseHeaders.set('Cache-Control', 'no-store, private');
+  return responseHeaders;
+};
+
+/**
  * @param {LoaderFunctionArgs}
  */
 export async function loader({context}) {
   const {cart} = context;
-  return await cart.get();
+  const cartData = await cart.get();
+
+  // Return cart data with no-cache headers to prevent CDN caching
+  return json(cartData, {
+    headers: {
+      'Cache-Control': 'no-store, private',
+    },
+  });
 }
 
 export default function Cart() {

@@ -158,7 +158,11 @@ export const headers = ({loaderHeaders, actionHeaders}) => {
 
   // Prevent CDN caching of the document response since it contains cart data
   // This fixes the bug where removed cart items reappear after page refresh
-  headers.set('Cache-Control', 'no-store, private');
+  headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+
+  // Tell CDN to vary cache by Cookie header - essential for cart personalization
+  // Without this, CDN might serve cached responses with wrong cart data
+  headers.set('Vary', 'Cookie');
 
   return headers;
 };

@@ -65,7 +65,8 @@ export async function action({request, context}) {
   const {cart: cartResult, errors, warnings} = result || {};
 
   // Ensure cart responses are not cached by CDN
-  headers.set('Cache-Control', 'no-store, private');
+  headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  headers.set('Vary', 'Cookie');
 
   return json(
     {
@@ -81,11 +82,15 @@ export async function action({request, context}) {
 }
 
 /**
- * Pass through headers from cart actions to prevent CDN caching
+ * Pass through headers from cart loaders and actions to prevent CDN caching.
+ * This ensures both GET (loader) and POST (action) responses have no-cache headers.
  */
-export const headers = ({actionHeaders}) => {
-  const responseHeaders = new Headers(actionHeaders);
-  responseHeaders.set('Cache-Control', 'no-store, private');
+export const headers = ({loaderHeaders, actionHeaders}) => {
+  // Use action headers if available (for POST requests), otherwise loader headers
+  const sourceHeaders = actionHeaders || loaderHeaders;
+  const responseHeaders = new Headers(sourceHeaders);
+  responseHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  responseHeaders.set('Vary', 'Cookie');
   return responseHeaders;
 };
 
@@ -99,7 +104,8 @@ export async function loader({context}) {
   // Return cart data with no-cache headers to prevent CDN caching
   return json(cartData, {
     headers: {
-      'Cache-Control': 'no-store, private',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+      'Vary': 'Cookie',
     },
   });
 }

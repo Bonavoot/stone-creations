@@ -27,6 +27,19 @@ export async function createAppLoadContext(request, env, executionContext) {
     AppSession.init(request, [env.SESSION_SECRET]),
   ]);
 
+  // Determine the cookie domain from the request URL
+  // This ensures the cart cookie works correctly across www and non-www domains
+  // CRITICAL: Without this, navigating between www.domain.com and domain.com
+  // will result in different carts being used
+  const url = new URL(request.url);
+  const isLocalhost =
+    url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  const cookieDomain = isLocalhost
+    ? undefined // Let browser use current domain for localhost
+    : url.hostname.startsWith('www.')
+      ? url.hostname.slice(4) // Remove 'www.' prefix to set cookie on base domain
+      : url.hostname; // Use the hostname as-is
+
   const hydrogenContext = createHydrogenContext({
     env,
     request,
@@ -39,9 +52,13 @@ export async function createAppLoadContext(request, env, executionContext) {
       queryVariables: {
         numCartLines: 100,
       },
-      // Explicitly provide cart ID functions
+      // Explicitly provide cart ID functions with proper cookie domain
       getCartId: cartGetIdDefault(request.headers),
-      setCartId: cartSetIdDefault(),
+      setCartId: cartSetIdDefault({
+        // Set cookie on base domain so it works on both www and non-www
+        // This fixes cart persistence issues when users navigate between domains
+        ...(cookieDomain && {domain: cookieDomain}),
+      }),
     },
   });
 

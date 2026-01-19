@@ -1,6 +1,5 @@
-import {Link, useFetchers, useRevalidator} from '@remix-run/react';
-import {createContext, useContext, useId, useRef, useEffect} from 'react';
-import {useOptimisticCart} from '@shopify/hydrogen';
+import {Link} from '@remix-run/react';
+import {createContext, useContext, useId} from 'react';
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
@@ -25,72 +24,18 @@ export function useCartState() {
 }
 
 /**
- * Provider component that manages cart state.
- *
- * IMPORTANT: We use useOptimisticCart for optimistic updates, but we also
- * need to manually trigger revalidation after cart mutations complete.
- * This is because CartForm uses useFetcher which doesn't automatically
- * trigger route revalidation, and the optimistic UI can cause components
- * to unmount before the fetcher completes.
+ * Simple cart provider that uses Hydrogen's useOptimisticCart.
+ * Note: We intentionally do NOT apply optimistic updates here because
+ * they can cause issues with component unmounting during removals.
+ * Instead, each cart action component handles its own loading state.
  *
  * @param {{cart: CartApiQueryFragment | null, children: React.ReactNode}}
  */
 function CartProvider({cart: originalCart, children}) {
-  const fetchers = useFetchers();
-  const revalidator = useRevalidator();
-  const previousFetcherStatesRef = useRef(new Map());
-
-  // Track cart-related fetchers that have completed
-  // When a cart fetcher transitions from loading/submitting to idle,
-  // we need to revalidate to get fresh cart data
-  useEffect(() => {
-    const cartFetchers = fetchers.filter((f) => {
-      const formInput = f.formData?.get('cartFormInput');
-      if (!formInput) return false;
-      try {
-        const parsed = JSON.parse(String(formInput));
-        return ['LinesRemove', 'LinesUpdate', 'LinesAdd'].includes(
-          parsed.action,
-        );
-      } catch {
-        return false;
-      }
-    });
-
-    cartFetchers.forEach((fetcher) => {
-      const key = fetcher.key || 'unknown';
-      const prevState = previousFetcherStatesRef.current.get(key);
-      const currentState = fetcher.state;
-
-      // If fetcher just completed (was loading/submitting, now idle)
-      // trigger a revalidation to get fresh cart data
-      if (
-        (prevState === 'loading' || prevState === 'submitting') &&
-        currentState === 'idle'
-      ) {
-        // Small delay to ensure the mutation has propagated
-        setTimeout(() => {
-          if (revalidator.state === 'idle') {
-            revalidator.revalidate();
-          }
-        }, 100);
-      }
-
-      previousFetcherStatesRef.current.set(key, currentState);
-    });
-
-    // Cleanup old entries
-    if (previousFetcherStatesRef.current.size > 50) {
-      const entries = Array.from(previousFetcherStatesRef.current.entries());
-      previousFetcherStatesRef.current = new Map(entries.slice(-25));
-    }
-  }, [fetchers, revalidator]);
-
-  // Use Hydrogen's optimistic cart hook for immediate UI updates
-  const optimisticCart = useOptimisticCart(originalCart);
-
+  // Just pass through the cart from the loader without optimistic updates
+  // This ensures the cart state is always from the server
   return (
-    <CartContext.Provider value={optimisticCart}>
+    <CartContext.Provider value={originalCart}>
       {children}
     </CartContext.Provider>
   );

@@ -1,6 +1,7 @@
-import {CartForm, Image} from '@shopify/hydrogen';
+import {Image} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
-import {Link, useFetcher} from '@remix-run/react';
+import {Link, useFetcher, useRevalidator} from '@remix-run/react';
+import {useEffect, useRef} from 'react';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
 
@@ -18,8 +19,57 @@ export function CartLineItem({layout, line}) {
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
   const {close} = useAside();
 
+  // Use a single fetcher for all cart operations on this line
+  // This prevents race conditions between multiple operations
+  const fetcher = useFetcher();
+  const revalidator = useRevalidator();
+  const previousFetcherState = useRef(fetcher.state);
+  const isUpdating = fetcher.state !== 'idle';
+
+  // When fetcher completes (transitions from loading/submitting to idle),
+  // trigger a revalidation to get fresh cart data from the server.
+  // This is necessary because useFetcher doesn't trigger loader revalidation.
+  useEffect(() => {
+    const wasActive =
+      previousFetcherState.current === 'loading' ||
+      previousFetcherState.current === 'submitting';
+    const isNowIdle = fetcher.state === 'idle';
+
+    if (wasActive && isNowIdle && fetcher.data) {
+      // Fetcher just completed with data, trigger revalidation
+      // Small delay to ensure server has processed the mutation
+      const timeoutId = setTimeout(() => {
+        if (revalidator.state === 'idle') {
+          revalidator.revalidate();
+        }
+      }, 50);
+      previousFetcherState.current = fetcher.state;
+      return () => clearTimeout(timeoutId);
+    }
+
+    previousFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data, revalidator]);
+
+  // Check if this line is being removed
+  let isRemoving = false;
+  if (fetcher.formData) {
+    try {
+      const formInput = fetcher.formData.get('cartFormInput');
+      if (formInput) {
+        const parsed = JSON.parse(String(formInput));
+        isRemoving = parsed.action === 'LinesRemove';
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   return (
-    <li key={id} className="cart-line">
+    <li
+      key={id}
+      className="cart-line"
+      style={{opacity: isRemoving ? 0.5 : 1}}
+    >
       {image && (
         <Image
           alt={title}
@@ -53,7 +103,11 @@ export function CartLineItem({layout, line}) {
             ))}
           </ul>
         </div>
-        <CartLineQuantity line={line} />
+        <CartLineQuantity
+          line={line}
+          fetcher={fetcher}
+          isUpdating={isUpdating}
+        />
       </div>
     </li>
   );
@@ -61,99 +115,74 @@ export function CartLineItem({layout, line}) {
 
 /**
  * Provides the controls to update the quantity of a line item in the cart.
- * These controls are disabled when the line item is new, and the server
- * hasn't yet responded that it was successfully added to the cart.
- * @param {{line: CartLine}}
+ * Uses a shared fetcher to prevent race conditions.
+ * @param {{
+ *   line: CartLine;
+ *   fetcher: ReturnType<typeof useFetcher>;
+ *   isUpdating: boolean;
+ * }}
  */
-function CartLineQuantity({line}) {
+function CartLineQuantity({line, fetcher, isUpdating}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
-  const {id: lineId, quantity, isOptimistic} = line;
-  const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
-  const nextQuantity = Number((quantity + 1).toFixed(0));
+  const {id: lineId, quantity} = line;
+  const prevQuantity = Math.max(0, quantity - 1);
+  const nextQuantity = quantity + 1;
+
+  const handleQuantityChange = (newQuantity) => {
+    if (isUpdating) return;
+    fetcher.submit(
+      {
+        cartFormInput: JSON.stringify({
+          action: 'LinesUpdate',
+          inputs: {lines: [{id: lineId, quantity: newQuantity}]},
+        }),
+      },
+      {method: 'post', action: '/cart'},
+    );
+  };
+
+  const handleRemove = () => {
+    if (isUpdating) return;
+    fetcher.submit(
+      {
+        cartFormInput: JSON.stringify({
+          action: 'LinesRemove',
+          inputs: {lineIds: [lineId]},
+        }),
+      },
+      {method: 'post', action: '/cart'},
+    );
+  };
 
   return (
     <div className="cart-line-quantity">
-      <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
-        <button
-          aria-label="Decrease quantity"
-          disabled={quantity <= 1 || !!isOptimistic}
-          name="decrease-quantity"
-          value={prevQuantity}
-        >
-          <span>&#8722;</span>
-        </button>
-      </CartLineUpdateButton>
-      <small>{quantity}</small>
-      <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
-        <button
-          aria-label="Increase quantity"
-          name="increase-quantity"
-          value={nextQuantity}
-          disabled={!!isOptimistic}
-        >
-          <span>&#43;</span>
-        </button>
-      </CartLineUpdateButton>
-      <CartLineRemoveButton lineIds={[lineId]} disabled={!!isOptimistic} />
-    </div>
-  );
-}
-
-/**
- * A button that removes a line item from the cart. It is disabled
- * when the line item is new, and the server hasn't yet responded
- * that it was successfully added to the cart.
- *
- * IMPORTANT: We use a fetcher with a stable key based on the line ID.
- * This ensures the mutation request completes even if the CartLineItem
- * component unmounts due to optimistic UI updates. Without this,
- * the fetcher would be destroyed when the component unmounts, and
- * the remove request would never complete.
- *
- * @param {{
- *   lineIds: string[];
- *   disabled: boolean;
- * }}
- */
-function CartLineRemoveButton({lineIds, disabled}) {
-  // Use a stable fetcher key so the request persists even if component unmounts
-  const fetcher = useFetcher({key: `cart-remove-${lineIds.join('-')}`});
-
-  return (
-    <fetcher.Form method="post" action="/cart">
-      <input
-        type="hidden"
-        name="cartFormInput"
-        value={JSON.stringify({
-          action: 'LinesRemove',
-          inputs: {lineIds},
-        })}
-      />
       <button
-        disabled={disabled || fetcher.state !== 'idle'}
-        type="submit"
+        aria-label="Decrease quantity"
+        disabled={quantity <= 1 || isUpdating}
+        name="decrease-quantity"
+        onClick={() => handleQuantityChange(prevQuantity)}
+        type="button"
       >
-        {fetcher.state !== 'idle' ? 'Removing...' : 'Remove'}
+        <span>&#8722;</span>
       </button>
-    </fetcher.Form>
-  );
-}
-
-/**
- * @param {{
- *   children: React.ReactNode;
- *   lines: CartLineUpdateInput[];
- * }}
- */
-function CartLineUpdateButton({children, lines}) {
-  return (
-    <CartForm
-      route="/cart"
-      action={CartForm.ACTIONS.LinesUpdate}
-      inputs={{lines}}
-    >
-      {children}
-    </CartForm>
+      <small>{quantity}</small>
+      <button
+        aria-label="Increase quantity"
+        name="increase-quantity"
+        disabled={isUpdating}
+        onClick={() => handleQuantityChange(nextQuantity)}
+        type="button"
+      >
+        <span>&#43;</span>
+      </button>
+      <button
+        disabled={isUpdating}
+        onClick={handleRemove}
+        type="button"
+      >
+        {isUpdating ? 'Wait...' : 'Remove'}
+      </button>
+    </div>
   );
 }
 

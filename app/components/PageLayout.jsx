@@ -1,5 +1,5 @@
-import {Link, useFetchers} from '@remix-run/react';
-import {createContext, useContext, useId, useRef} from 'react';
+import {Link, useFetchers, useRevalidator} from '@remix-run/react';
+import {createContext, useContext, useId, useRef, useEffect} from 'react';
 import {useOptimisticCart} from '@shopify/hydrogen';
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
@@ -13,12 +13,6 @@ import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
 
 /**
  * Cart context for sharing the most up-to-date cart state across the app.
- * This is necessary because:
- * 1. CartForm uses useFetcher() which doesn't trigger route revalidation
- * 2. useOptimisticCart only works during pending state
- * 3. When an item is removed optimistically, the CartLineItem unmounts,
- *    killing the fetcher before we can capture its result
- * 4. We need to track pending removals and filter them out manually
  */
 const CartContext = createContext(null);
 
@@ -31,90 +25,74 @@ export function useCartState() {
 }
 
 /**
- * Provider component that manages cart state by:
- * 1. Taking the original cart from root loader
- * 2. Tracking pending removals (line IDs being removed)
- * 3. Filtering out removed lines manually since useOptimisticCart
- *    causes unmounts that kill fetchers
- * 4. Syncing with loader data when it updates
+ * Provider component that manages cart state.
+ *
+ * IMPORTANT: We use useOptimisticCart for optimistic updates, but we also
+ * need to manually trigger revalidation after cart mutations complete.
+ * This is because CartForm uses useFetcher which doesn't automatically
+ * trigger route revalidation, and the optimistic UI can cause components
+ * to unmount before the fetcher completes.
  *
  * @param {{cart: CartApiQueryFragment | null, children: React.ReactNode}}
  */
 function CartProvider({cart: originalCart, children}) {
   const fetchers = useFetchers();
+  const revalidator = useRevalidator();
+  const previousFetcherStatesRef = useRef(new Map());
 
-  // Track the previous cart ID to detect when loader refreshes
-  const prevCartIdRef = useRef(originalCart?.id);
-  // Track line IDs that are being removed
-  const pendingRemovalsRef = useRef(new Set());
-
-  // Find all PENDING removal fetchers (submitting or loading)
-  const pendingRemovalFetchers = fetchers.filter(
-    (f) =>
-      (f.state === 'submitting' || f.state === 'loading') &&
-      f.formData?.get('cartFormInput'),
-  );
-
-  // Track new pending removals
-  pendingRemovalFetchers.forEach((fetcher) => {
-    try {
-      const formInput = fetcher.formData?.get('cartFormInput');
-      if (formInput) {
-        const parsed = JSON.parse(formInput);
-        if (parsed.action === 'LinesRemove' && parsed.inputs?.lineIds) {
-          parsed.inputs.lineIds.forEach((id) => {
-            pendingRemovalsRef.current.add(id);
-          });
-        }
-      }
-    } catch {
-      // Ignore parse errors
-    }
-  });
-
-  // If the cart ID changed (loader refresh), clear pending removals
-  // This means the server has given us fresh data
-  if (originalCart?.id !== prevCartIdRef.current) {
-    pendingRemovalsRef.current.clear();
-    prevCartIdRef.current = originalCart?.id;
-  }
-
-  // Also clear pending removals if they're no longer in the cart
-  // (meaning the server has processed them)
-  if (originalCart?.lines?.nodes && pendingRemovalsRef.current.size > 0) {
-    const currentLineIds = new Set(originalCart.lines.nodes.map((n) => n.id));
-    pendingRemovalsRef.current.forEach((removedId) => {
-      if (!currentLineIds.has(removedId)) {
-        pendingRemovalsRef.current.delete(removedId);
+  // Track cart-related fetchers that have completed
+  // When a cart fetcher transitions from loading/submitting to idle,
+  // we need to revalidate to get fresh cart data
+  useEffect(() => {
+    const cartFetchers = fetchers.filter((f) => {
+      const formInput = f.formData?.get('cartFormInput');
+      if (!formInput) return false;
+      try {
+        const parsed = JSON.parse(String(formInput));
+        return ['LinesRemove', 'LinesUpdate', 'LinesAdd'].includes(
+          parsed.action,
+        );
+      } catch {
+        return false;
       }
     });
-  }
 
-  // Create an optimistic cart by filtering out pending removals
-  let optimisticCart = originalCart;
-  if (originalCart && pendingRemovalsRef.current.size > 0) {
-    const filteredLines = originalCart.lines?.nodes?.filter(
-      (line) => !pendingRemovalsRef.current.has(line.id),
-    );
-    const totalQuantity = filteredLines?.reduce(
-      (sum, line) => sum + line.quantity,
-      0,
-    );
-    optimisticCart = {
-      ...originalCart,
-      lines: {
-        ...originalCart.lines,
-        nodes: filteredLines || [],
-      },
-      totalQuantity: totalQuantity ?? 0,
-    };
-  }
+    cartFetchers.forEach((fetcher) => {
+      const key = fetcher.key || 'unknown';
+      const prevState = previousFetcherStatesRef.current.get(key);
+      const currentState = fetcher.state;
 
-  // Also apply useOptimisticCart for other mutations (add, update quantity)
-  const finalCart = useOptimisticCart(optimisticCart);
+      // If fetcher just completed (was loading/submitting, now idle)
+      // trigger a revalidation to get fresh cart data
+      if (
+        (prevState === 'loading' || prevState === 'submitting') &&
+        currentState === 'idle'
+      ) {
+        // Small delay to ensure the mutation has propagated
+        setTimeout(() => {
+          if (revalidator.state === 'idle') {
+            revalidator.revalidate();
+          }
+        }, 100);
+      }
+
+      previousFetcherStatesRef.current.set(key, currentState);
+    });
+
+    // Cleanup old entries
+    if (previousFetcherStatesRef.current.size > 50) {
+      const entries = Array.from(previousFetcherStatesRef.current.entries());
+      previousFetcherStatesRef.current = new Map(entries.slice(-25));
+    }
+  }, [fetchers, revalidator]);
+
+  // Use Hydrogen's optimistic cart hook for immediate UI updates
+  const optimisticCart = useOptimisticCart(originalCart);
 
   return (
-    <CartContext.Provider value={finalCart}>{children}</CartContext.Provider>
+    <CartContext.Provider value={optimisticCart}>
+      {children}
+    </CartContext.Provider>
   );
 }
 

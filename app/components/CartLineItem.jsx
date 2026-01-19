@@ -1,6 +1,6 @@
 import {CartForm, Image} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
-import {Link} from '@remix-run/react';
+import {Link, useFetcher} from '@remix-run/react';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
 
@@ -103,22 +103,39 @@ function CartLineQuantity({line}) {
  * A button that removes a line item from the cart. It is disabled
  * when the line item is new, and the server hasn't yet responded
  * that it was successfully added to the cart.
+ *
+ * IMPORTANT: We use a fetcher with a stable key based on the line ID.
+ * This ensures the mutation request completes even if the CartLineItem
+ * component unmounts due to optimistic UI updates. Without this,
+ * the fetcher would be destroyed when the component unmounts, and
+ * the remove request would never complete.
+ *
  * @param {{
  *   lineIds: string[];
  *   disabled: boolean;
  * }}
  */
 function CartLineRemoveButton({lineIds, disabled}) {
+  // Use a stable fetcher key so the request persists even if component unmounts
+  const fetcher = useFetcher({key: `cart-remove-${lineIds.join('-')}`});
+
   return (
-    <CartForm
-      route="/cart"
-      action={CartForm.ACTIONS.LinesRemove}
-      inputs={{lineIds}}
-    >
-      <button disabled={disabled} type="submit">
-        Remove
+    <fetcher.Form method="post" action="/cart">
+      <input
+        type="hidden"
+        name="cartFormInput"
+        value={JSON.stringify({
+          action: 'LinesRemove',
+          inputs: {lineIds},
+        })}
+      />
+      <button
+        disabled={disabled || fetcher.state !== 'idle'}
+        type="submit"
+      >
+        {fetcher.state !== 'idle' ? 'Removing...' : 'Remove'}
       </button>
-    </CartForm>
+    </fetcher.Form>
   );
 }
 
